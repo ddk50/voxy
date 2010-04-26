@@ -1,0 +1,53 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8">
+	<title>サーバーにデータを保存する</title>
+	<script type="text/javascript" src="main_code.js"></script>
+	<style type="text/css">
+	<!--
+	div.display_box {
+		background-color: #ffffff;
+		width: 1024px;
+		height: 768px;
+		border: 1px solid #000;
+	}
+	
+	span {
+		font-size:1px;
+		border:none;
+		padding:0;
+		display:block;
+	}
+
+	#doc {
+		width:720px;
+		height:400px;
+		background:#CCC;
+	}
+	-->
+	</style>
+</head>
+<body onload="load();">
+
+<h1>マウス座標表示テスト(共通）</h1>
+<div id="result1"></div>
+<div id="result2"></div>
+<div id="testbox"></div>
+
+<!--<div id="doc" onmousemove="getMouseXY(event);"></div>-->
+
+<!--<div id="canvasarea">-->
+<div id="docs">
+	<canvas id="c1" width="640" height="480" onmousemove="getMouseXY(event)"></canvas>
+</div>
+
+<form>
+	<input type="button" value="Emuexec" onClick="emuexec_comet()">Emuexec</button>
+	<input type="button" value="Getuser" onClick="getuser_comet()">Getuser</button>
+	<input type="button" value="command" onClick="test()">command</button>
+	<!-- <input type="button" value="Getimg" onClick="test_test()">Getimg</button> -->
+	<textarea id="testForm" row="20" cols="50"></textarea>
+</form>
+
+</body>
+</html>
