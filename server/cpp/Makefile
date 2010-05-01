@@ -3,12 +3,15 @@ CPP = g++
 CPPFLAGS = -Wall -O0
 LDFLAGS = -lboost_thread -lpthread -lpng -ljpeg
 OBJS = mockserver.o
+MSERVER = mserver
 
-mockserver: $(OBJS)
-	$(CPP) $(LDFLAGS) -o mockserver $(OBJS)
+mserver: $(OBJS)
+	$(CPP) $(LDFLAGS) -o $(MSERVER) $(OBJS)
 
 .cpp.o:
-	$(CPP) -c $<
+	$(CPP) $(CPPFLAGS) -c $<
 
 clean:
 	rm -f *.o
+	rm -f $(MSERVER)
+
