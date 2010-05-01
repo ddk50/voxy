@@ -1,7 +1,7 @@
 
 CPP = g++
 CPPFLAGS = -Wall -O0
-LDFLAGS = -lboost_thread -lpthread
+LDFLAGS = -lboost_thread -lpthread -lpng -ljpeg
 OBJS = mockserver.o
 
 mockserver: $(OBJS)
