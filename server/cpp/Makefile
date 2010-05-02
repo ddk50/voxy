@@ -1,7 +1,7 @@
 
-CPP = g++
-CPPFLAGS = -Wall -O0
-LDFLAGS = -lboost_thread -lpthread -lpng -ljpeg
+CPP = gcc
+CPPFLAGS = -Wall -O0 -g
+LDFLAGS = -lboost_thread -lboost_system -lpthread -lpng -ljpeg -g
 OBJS = mockserver.o
 MSERVER = mserver
 
