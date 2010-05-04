@@ -12,9 +12,12 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
+#include "sexpr.h"
+
 using boost::asio::ip::tcp;
 using namespace boost::gil;
 using namespace boost;
+using namespace std;
 
 /* Models a Unary Function */
 template <typename P>   /* Models PixelValueConcept */
@@ -69,25 +72,57 @@ private:
   }
 };
 
-const int max_length = 1024;
-
-typedef shared_ptr<tcp::socket> socket_ptr;
-
-void session(socket_ptr sock)
+int cmd_updatetile(vector<string>& rest_token)  
 {
+  return 1;	
+}
+
+int cmd_chngresol(vector<string>& rest_token)  
+{  
+  return 1;  
+}
+
+void branching(vector<string>& token_list)  
+{
+  
+}
+
+const int max_length = 1024 * 2;
+typedef shared_ptr<tcp::socket> socket_ptr;
+typedef shared_ptr<sparser> sparser_ptr;
+
+void session(socket_ptr sock)  
+{  
+  sparser_ptr sp = sparser_ptr(new sparser());
+  string message_chunk;  
+  
   try {
 	while (1) {
-	  char data[max_length];	  
+	  char  data[max_length];
+	  vector<string>  tokens;	  
 	  boost::system::error_code  error;	  
 	  size_t length = sock->read_some(asio::buffer(data), error);	  
-	  
+
 	  if (error == asio::error::eof) {		
-		break; // Connection closed cleanly by peer.
+		break; // Connection closed cleanly by peer.		
 	  } else if (error) {		
 		throw boost::system::system_error(error); // Some other error.		
-	  }
-	  
-	  asio::write(*sock, asio::buffer(data, length));	  
+	  }	  
+
+	  if (data[length - 1] == '\n') {		
+		message_chunk.append(data, length);		
+		
+		sp->read_expression(message_chunk, tokens);		
+		BOOST_FOREACH(string& v, tokens) {
+		  cout << v << endl;	
+		}
+		
+		message_chunk.erase();		
+	  } else {
+		message_chunk.append(data, length);		
+		continue;		
+	  }	  
+	  //	  asio::write(*sock, asio::buffer(data, length));	  
 	}
   } catch (std::exception& e) {	
 	std::cerr << "Exception in thread: " << e.what() << "\n";
@@ -106,11 +141,11 @@ void server(asio::io_service& io_service, short port)
 
 int start_server(int argc, char *argv[])
 {
-  try {
+  try {	
 	if (argc != 2) {
-	  std::cerr << "Usage: blocking_tcp_echo_server <port>\n";
-	  return 1;
-	}
+	  std::cerr << "Usage: blocking_tcp_echo_server <port>\n";	  
+	  return 1;	  
+	}	
 	boost::asio::io_service io_service;
 	
 	server(io_service, std::atoi(argv[1]));
@@ -127,22 +162,36 @@ typedef virtual_2d_locator<deref_t, false>  locator_t;
 typedef image_view<locator_t>               my_virt_view_t;
 
 int main(int argc, char *argv[])  
-{
-  mtrace();  
-  
+{  
   function_requires<PixelLocatorConcept<locator_t> >();  
   gil_function_requires<StepIteratorConcept<locator_t::x_iterator> >();
-
+  
   start_server(argc, argv);  
 
   //  point_t dims(1280, 720);  
   //  my_virt_view_t mandel(dims, locator_t(point_t(0, 0), point_t(1, 1), deref_t(dims, rgb8_pixel_t(255, 0, 255), rgb8_pixel_t(0, 255, 0))));
   //  my_virt_view_t mandel(dims, locator_t(point_t(-2.0, 2.0), point_t(1.0, 1.7), deref_t(dims, rgb8_pixel_t(255, 160, 0), rgb8_pixel_t(0, 0, 0))));  
-  // 2..1, -1.5..1.5
+  // 2..1, -1.5..1.5  
   
   //  png_write_view("out-mandelbrot.png", mandel);
 
-  muntrace();  
-
   return 0;
+}
+
+void test()  
+{
+  sparser_ptr sp = sparser_ptr(new sparser());  
+  vector<string> tokens;  
+  string test_pattern =	
+	"(:UPDATETILE \"test.png\" 1 2 3 4)\n"	
+	"(:CHNGRESOL 5 6)\n"	
+	"(:MOUSEEVENT x y btnnum)\n"	
+	"(:KEYEVENT \"hello world\")\n"	
+	"(:VNCCONNECT \"tertes.homelinux.com\" \"hogefoo\")\n"	
+	"(:VNCDISCONNECT)\n";  
+  
+  sp->read_expression(test_pattern, tokens);  
+  BOOST_FOREACH(string& v, tokens) {
+	cout << v << endl;	
+  }  
 }
