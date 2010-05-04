@@ -89,12 +89,12 @@ int cmd_updatetile(deque<string>& rest_token)
   int h = lexical_cast<int>(rest_token[3]);  
   
   cout << boost::format("ACCEPT UPDATETILE (x, y, w, h) = (%d, %d, %d, %d)") % x % y % w % h
-	   << endl;  
-
+	   << endl;
+  
+  rest_token.pop_front();  
   rest_token.pop_front();
   rest_token.pop_front();
-  rest_token.pop_front();
-  rest_token.pop_front();
+  rest_token.pop_front();  
 						
   return rest_token.size();  
 }
@@ -144,14 +144,20 @@ struct command_map cmap[] = {
 
 void branching(deque<string>& token_list)  
 {
+  int canonical = 0;  
  once:  
   BOOST_FOREACH(struct command_map& e, cmap) {	
 	if (e.command == token_list[0]) {
+	  canonical = 1;	  
 	  token_list.pop_front();	  
-	  if (e.function(token_list) > 0)
+	  if (e.function(token_list) > 0)		
 		goto once;	  
-	}
+	}	
   }
+
+  if (!canonical) {
+	cout << "unrecognized command: " << token_list[0] << endl;	
+  }  
 }
 
 const int max_length = 1024 * 2;
