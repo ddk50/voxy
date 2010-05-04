@@ -4,6 +4,7 @@
 
 #include <string>
 #include <queue>
+#include <deque>
 #include <iostream>
 #include <fstream>
 #include <boost/tokenizer.hpp>
@@ -17,10 +18,10 @@ using namespace boost;
 //
 // [ management-server ]                             [ httpd-frontend ]
 //           |             update mosic tiles                    |
-//           |       --(:UPDATETILE fname x y w h)-->            |
+//           |       --(:UPDATATILE fname x y w h)-->            |
 //           |                                                   |
 //           |             update resolution                     |
-//           |           --(:CHNGRESOL h w)-->                   |
+//           |           --(:CHNGRESOL w h)-->                   |
 //           |                                                   |
 //           |         <--(:MOUSEEVENT x y btnnum)--             |
 //           |          <--(:KEYEVENT string)--                  |
@@ -74,7 +75,7 @@ public:
   // This function does  not parse nested s-expression well.  
   //  
   int read_expression(string& s,
-					  vector<string>& tokens,
+					  deque<string>& tokens,					  
 					  int bracket_level = 0)	
   {
 	char c = s[0];

@@ -1,6 +1,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <deque>
 
 #include <boost/gil/image.hpp>
 #include <boost/gil/typedefs.hpp>
@@ -11,6 +12,8 @@
 #include <boost/smart_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include "sexpr.h"
 
@@ -72,22 +75,87 @@ private:
   }
 };
 
-int cmd_updatetile(vector<string>& rest_token)  
-{
-  return 1;	
-}
-
-int cmd_chngresol(vector<string>& rest_token)  
+struct command_map
 {  
-  return 1;  
+  int   (*function)(deque<string>&);  
+  const char*   command;  
+};
+
+int cmd_updatetile(deque<string>& rest_token)  
+{  
+  int x = lexical_cast<int>(rest_token[0]);
+  int y = lexical_cast<int>(rest_token[1]);
+  int w = lexical_cast<int>(rest_token[2]);
+  int h = lexical_cast<int>(rest_token[3]);  
+  
+  cout << boost::format("ACCEPT UPDATETILE (x, y, w, h) = (%d, %d, %d, %d)") % x % y % w % h
+	   << endl;  
+
+  rest_token.pop_front();
+  rest_token.pop_front();
+  rest_token.pop_front();
+  rest_token.pop_front();
+						
+  return rest_token.size();  
 }
 
-void branching(vector<string>& token_list)  
+int cmd_chngresol(deque<string>& rest_token)  
 {
+  int w = lexical_cast<int>(rest_token[0]);
+  int h = lexical_cast<int>(rest_token[1]);
   
+  cout << boost::format("ACCEPT CHNGRESOL (w, h) = (%d, %d)") % w % h
+	   << endl;  
+
+  rest_token.pop_front();
+  rest_token.pop_front();
+  
+  return rest_token.size();  
+}
+
+int cmd_mouseevent(deque<string>& rest_token)  
+{
+  int x = lexical_cast<int>(rest_token[0]);
+  int y = lexical_cast<int>(rest_token[1]);
+  
+  cout << boost::format("ACCEPT MOUSEEVENT (x, y) = (%d, %d)") % x % y
+	   << endl;  
+
+  rest_token.pop_front();
+  rest_token.pop_front();  
+  
+  return rest_token.size();  
+}
+
+int cmd_keyevent(deque<string>& rest_token)  
+{
+  cout << "ACCEPT KEYEVENT" << " keyvalues: "	
+	   << rest_token[0] << endl;
+  rest_token.pop_front();  
+  return rest_token.size();  
+}
+
+struct command_map cmap[] = {
+  { cmd_updatetile, ":UPDATATILE" },  
+  { cmd_chngresol,  ":CHNGRESOL"  },
+  { cmd_mouseevent, ":MOUSEEVENT" },
+  { cmd_keyevent,   ":KEYEVENT"   },  
+};
+
+void branching(deque<string>& token_list)  
+{
+ once:  
+  BOOST_FOREACH(struct command_map& e, cmap) {	
+	if (e.command == token_list[0]) {
+	  token_list.pop_front();	  
+	  if (e.function(token_list) > 0)
+		goto once;	  
+	}
+  }
 }
 
 const int max_length = 1024 * 2;
+const char *donemsg  = "(:DONE)\n";
 typedef shared_ptr<tcp::socket> socket_ptr;
 typedef shared_ptr<sparser> sparser_ptr;
 
@@ -95,11 +163,13 @@ void session(socket_ptr sock)
 {  
   sparser_ptr sp = sparser_ptr(new sparser());
   string message_chunk;  
+
+  message_chunk.resize(max_length, ' ');  
   
   try {
 	while (1) {
 	  char  data[max_length];
-	  vector<string>  tokens;	  
+	  deque<string>  tokens;	  
 	  boost::system::error_code  error;	  
 	  size_t length = sock->read_some(asio::buffer(data), error);	  
 
@@ -110,19 +180,15 @@ void session(socket_ptr sock)
 	  }	  
 
 	  if (data[length - 1] == '\n') {		
-		message_chunk.append(data, length);		
-		
-		sp->read_expression(message_chunk, tokens);		
-		BOOST_FOREACH(string& v, tokens) {
-		  cout << v << endl;	
-		}
-		
-		message_chunk.erase();		
+		message_chunk.append(data, length); {		  
+		  sp->read_expression(message_chunk, tokens);
+		  branching(tokens);
+		}; message_chunk.erase();		
+		asio::write(*sock, asio::buffer(donemsg, strlen(donemsg)));		
 	  } else {
-		message_chunk.append(data, length);		
+		message_chunk.append(data, length);
 		continue;		
-	  }	  
-	  //	  asio::write(*sock, asio::buffer(data, length));	  
+	  }	  	 
 	}
   } catch (std::exception& e) {	
 	std::cerr << "Exception in thread: " << e.what() << "\n";
@@ -181,7 +247,7 @@ int main(int argc, char *argv[])
 void test()  
 {
   sparser_ptr sp = sparser_ptr(new sparser());  
-  vector<string> tokens;  
+  deque<string> tokens;  
   string test_pattern =	
 	"(:UPDATETILE \"test.png\" 1 2 3 4)\n"	
 	"(:CHNGRESOL 5 6)\n"	
