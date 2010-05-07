@@ -62,13 +62,13 @@ struct mandelbrot_fn
     }
 
 private:
-    double get_num_iter(const point2<double>& p) const	
+    double get_num_iter(const point2<double>& p) const        
     {	
         point2<double> Z(0, 0);	
         for (int i = 0 ; i < MAX_ITER ; ++i) {	  
             Z = point2<double>(Z.x*Z.x - Z.y*Z.y + p.x, 2.0*Z.x*Z.y + p.y);	  
             if (Z.x * Z.x + Z.y * Z.y > 4.0) {		
-                return i / (double)MAX_ITER;		
+                return i / (double)MAX_ITER;                
             }	  
         }
         return 0;	
@@ -111,7 +111,7 @@ int cmd_chngresol(deque<string>& rest_token, string& ret)
         rest_token.pop_front();
         rest_token.pop_front();	
     } else {
-        throw "too few argument for chngresol\n";	
+        throw "too few argument for chngresol\n";        
     }
   
     return rest_token.size();  
@@ -129,9 +129,9 @@ int cmd_mouseevent(deque<string>& rest_token, string& ret)
         rest_token.pop_front();
         rest_token.pop_front();	
 	
-        return rest_token.size();	
+        return rest_token.size();        
     } else {
-        throw "too few argument for chngresol\n";
+        throw "too few argument for chngresol\n";        
     }
 }
 
@@ -141,7 +141,7 @@ int cmd_keyevent(deque<string>& rest_token, string& ret)
          << rest_token[0] << endl;
     rest_token.pop_front();
     printf("test %d\n", rest_token.size());  
-    return rest_token.size();  
+    return rest_token.size();    
 }
 
 int cmd_vncconnect(deque<string>& rest_token, string& ret)
@@ -157,7 +157,8 @@ int cmd_vncconnect(deque<string>& rest_token, string& ret)
     return rest_token.size();  
 }
 
-struct command_map cmap[] = {
+static struct command_map cmap[] = {   
+    { cmd_getupdate,  ":GETUPDATA"  },    
     { cmd_updatetile, ":UPDATATILE" },  
     { cmd_chngresol,  ":CHNGRESOL"  },
     { cmd_mouseevent, ":MOUSEEVENT" },
@@ -178,7 +179,7 @@ void branching(deque<string>& token_list, string& ret)
                 if (e.function(token_list, ret) > 0)		  
                     goto once;		
                 break;		
-            }
+            }            
         }	
     } catch (std::exception& e) {
         cout << "illegal command"<< e.what() << endl;	
@@ -205,9 +206,9 @@ void session(socket_ptr sock)
     try {
         while (1) {
             char  data[max_length];	  
-            deque<string>  tokens;	  
+            deque<string>  tokens;            
             boost::system::error_code  error;	  
-            size_t length = sock->read_some(asio::buffer(data), error);	  
+            size_t length = sock->read_some(asio::buffer(data), error);            
 
             if (error == asio::error::eof) {		
                 break; // Connection closed cleanly by peer.		
@@ -227,7 +228,7 @@ void session(socket_ptr sock)
             }	  	 
         }
     } catch (std::exception& e) {	
-        std::cerr << "Exception in thread: " << e.what() << "\n";
+        cerr << "Exception in thread: " << e.what() << endl;        
     }  
 }
 
@@ -252,7 +253,7 @@ int start_server(int argc, char *argv[])
 	
         server(io_service, std::atoi(argv[1]));
     } catch (std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";	
+        cerr << "Exception: " << e.what() << "\n";        
     }
   
     return 0;  
@@ -266,14 +267,14 @@ typedef image_view<locator_t>               my_virt_view_t;
 int main(int argc, char *argv[])  
 {  
     function_requires<PixelLocatorConcept<locator_t> >();  
-    gil_function_requires<StepIteratorConcept<locator_t::x_iterator> >();
+    gil_function_requires<StepIteratorConcept<locator_t::x_iterator> >();    
   
     start_server(argc, argv);  
 
     //  point_t dims(1280, 720);  
     //  my_virt_view_t mandel(dims, locator_t(point_t(0, 0), point_t(1, 1), deref_t(dims, rgb8_pixel_t(255, 0, 255), rgb8_pixel_t(0, 255, 0))));
-    //  my_virt_view_t mandel(dims, locator_t(point_t(-2.0, 2.0), point_t(1.0, 1.7), deref_t(dims, rgb8_pixel_t(255, 160, 0), rgb8_pixel_t(0, 0, 0))));  
-    // 2..1, -1.5..1.5  
+    //  my_virt_view_t mandel(dims, locator_t(point_t(-2.0, 2.0), point_t(1.0, 1.7), deref_t(dims, rgb8_pixel_t(255, 160, 0), rgb8_pixel_t(0, 0, 0))));    
+    // 2..1, -1.5..1.5    
   
     //  png_write_view("out-mandelbrot.png", mandel);  
 
@@ -290,7 +291,7 @@ void test()
         "(:MOUSEEVENT x y btnnum)\n"	
         "(:KEYEVENT \"hello world\")\n"	
         "(:VNCCONNECT \"tertes.homelinux.com\" \"hogefoo\")\n"	
-        "(:VNCDISCONNECT)\n";  
+        "(:VNCDISCONNECT)\n";    
   
     sp->read_expression(test_pattern, tokens);  
     BOOST_FOREACH(string& v, tokens) {

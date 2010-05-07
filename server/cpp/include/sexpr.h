@@ -16,7 +16,8 @@ using namespace boost;
 //
 //                    @@@ The list of command @@@
 //
-// [ management-server ]                             [ httpd-frontend ]
+// [ management-server ]                               [ httpd-frontend ]
+//           |             <--(:GETUPDATA)--                     |
 //           |             update mosic tiles                    |
 //           |       --(:UPDATATILE fname x y w h)-->            |
 //           |                                                   |
