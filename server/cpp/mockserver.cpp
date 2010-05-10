@@ -69,10 +69,10 @@ struct mandelbrot_fn
 	
         return ret;
     }
-
+    
 private:
-    double get_num_iter(const point2<double>& p) const        
-    {	
+    double get_num_iter(const point2<double>& p) const
+    {        
         point2<double> Z(0, 0);	
         for (int i = 0 ; i < MAX_ITER ; ++i) {	  
             Z = point2<double>(Z.x*Z.x - Z.y*Z.y + p.x, 2.0*Z.x*Z.y + p.y);	  
@@ -128,7 +128,7 @@ void logging(string cmdtype)
 
 int cmd_updatetile(deque<string>& main_que,                   
                    deque<string>& rest_token)    
-{    
+{
     int x = lexical_cast<int>(rest_token[0]);    
     int y = lexical_cast<int>(rest_token[1]);
     int w = lexical_cast<int>(rest_token[2]);
@@ -358,7 +358,8 @@ void generator(deque<string>& main_que)
 
     point_t dims(1280, 720);
     
-    while (1) {        
+    while (1) {
+        cout << "main" << endl;        
         my_virt_view_t mandel(dims, locator_t(point_t(-2.0, 2.0),
                                               point_t(1.0, 1.7),
                                               deref_t(dims,
