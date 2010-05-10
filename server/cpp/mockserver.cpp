@@ -8,6 +8,11 @@
 #include <boost/gil/extension/io/jpeg_io.hpp>
 #include <boost/gil/extension/io/png_io.hpp>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/local_time_adjustor.hpp>
+#include <boost/date_time/c_local_time_adjustor.hpp>
+#include <boost/date_time/time_facet.hpp>
+
 #include <boost/bind.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/asio.hpp>
@@ -21,6 +26,10 @@ using boost::asio::ip::tcp;
 using namespace boost::gil;
 using namespace boost;
 using namespace std;
+
+using boost::posix_time::ptime;
+using boost::posix_time::us_dst;
+using boost::posix_time::second_clock;
 
 /* Models a Unary Function */
 template <typename P>   /* Models PixelValueConcept */
@@ -107,16 +116,25 @@ struct command_map
     const char* command;    
 };
 
+typedef boost::date_time::c_local_adjustor<ptime> local_adj;
+void logging(string cmdtype)    
+{
+    ptime t = second_clock::universal_time();    
+    ptime tt = local_adj::utc_to_local(t);    
+
+    cout << "[" << tt << "]" << " ACCEPT " << cmdtype        
+         << endl;    
+}
+
 int cmd_updatetile(deque<string>& main_que,                   
                    deque<string>& rest_token)    
 {    
     int x = lexical_cast<int>(rest_token[0]);    
     int y = lexical_cast<int>(rest_token[1]);
     int w = lexical_cast<int>(rest_token[2]);
-    int h = lexical_cast<int>(rest_token[3]);    
-  
-    cout << boost::format("ACCEPT UPDATETILE (x, y, w, h) = (%d, %d, %d, %d)") % x % y % w % h
-         << endl;    
+    int h = lexical_cast<int>(rest_token[3]);
+    
+    logging(boost::str(format("UPDATETILE (x, y, w, h) = (%d, %d, %d, %d)") % x % y % w % h));    
   
     rest_token.pop_front();  
     rest_token.pop_front();
@@ -133,9 +151,8 @@ int cmd_chngresol(deque<string>& main_que,
         int w = lexical_cast<int>(rest_token[0]);
         int h = lexical_cast<int>(rest_token[1]);
   
-        cout << boost::format("ACCEPT CHNGRESOL (w, h) = (%d, %d)") % w % h	
-             << endl;  
-
+        logging(boost::str(format("CHNGRESOL (w, h) = (%d, %d)") % w % h));        
+        
         rest_token.pop_front();
         rest_token.pop_front();	
     } else {
@@ -152,8 +169,7 @@ int cmd_mouseevent(deque<string>& main_que,
         int x = lexical_cast<int>(rest_token[0]);
         int y = lexical_cast<int>(rest_token[1]);
 	
-        cout << boost::format("ACCEPT MOUSEEVENT (x, y) = (%d, %d)") % x % y
-             << endl;  
+        logging(boost::str(format("MOUSEEVENT (x, y) = (%d, %d)") % x % y));        
 
         rest_token.pop_front();
         rest_token.pop_front();	
@@ -167,8 +183,8 @@ int cmd_mouseevent(deque<string>& main_que,
 int cmd_keyevent(deque<string>& main_que,                 
                  deque<string>& rest_token)    
 {
-    cout << "ACCEPT KEYEVENT" << " keyvalues: "        
-         << rest_token[0] << endl;    
+    logging(boost::str(format("KEYVALUES values: %s") % rest_token[0]));    
+    
     rest_token.pop_front();
     printf("test %d\n", rest_token.size());    
     return rest_token.size();    
@@ -181,11 +197,19 @@ int cmd_vncconnect(deque<string>& main_que,
     string password = rest_token[1];    
 
     /* connect vnc */
-    safe_pushback(main_que, "(:GETUPDATA 0 0 10 10)");    
+    logging(boost::str(format("VNCCONNECT host: %s password: %s") % host % password));    
 
     rest_token.pop_front();    
     rest_token.pop_front();    
 
+    return rest_token.size();    
+}
+
+int cmd_vncdisconnect(deque<string>& main_que,                      
+                      deque<string>& rest_token)    
+{    
+    /* connect vnc */    
+    logging(boost::str(format("VNCDISCONNECT")));    
     return rest_token.size();    
 }
 
@@ -201,7 +225,8 @@ static struct command_map cmap[] = {
     { cmd_chngresol,  ":CHNGRESOL"  },
     { cmd_mouseevent, ":MOUSEEVENT" },
     { cmd_keyevent,   ":KEYEVENT"   },
-    { cmd_vncconnect, ":VNCCONNECT" },  
+    { cmd_vncconnect, ":VNCCONNECT" },
+    { cmd_vncdisconnect, ":VNCDISCONNECT" },    
 };
 
 void branching(deque<string>& main_que,               
@@ -213,9 +238,9 @@ void branching(deque<string>& main_que,
         canonical = 0;	
         BOOST_FOREACH(struct command_map& e, cmap) {            
             if (e.command == token_list[0]) {                
-                canonical = 1;		
+                canonical = 1;                
                 token_list.pop_front();                
-                if (e.function(token_list, main_que) > 0)                    
+                if (e.function(main_que, token_list) > 0)                    
                     goto once;                
                 break;                
             }            
@@ -242,8 +267,6 @@ typedef shared_ptr<sparser> sparser_ptr;
 void sendback_mesg(socket_ptr sock,                   
                    deque<string>& main_que)    
 {
-    mutex::scoped_lock look(thread_sync);    
-    
     if (main_que.size() > 0) {        
         safe_pushback(main_que, "\n");        
         BOOST_FOREACH(string& v, main_que) {        
@@ -253,6 +276,7 @@ void sendback_mesg(socket_ptr sock,
         string ret = "(:DONE)\n";        
         asio::write(*sock, asio::buffer(ret.c_str(), strlen(ret.c_str())));        
     }
+    safe_clear(main_que);    
 }
 
 void session(socket_ptr sock, deque<string>& main_que)    
@@ -292,7 +316,7 @@ void session(socket_ptr sock, deque<string>& main_que)
     }    
 }
 
-void server(asio::io_service& io_service,
+void server(asio::io_service& io_service,            
             short port, deque<string>& main_que)    
 {
     tcp::acceptor acc(io_service, tcp::endpoint(tcp::v4(), port));  
