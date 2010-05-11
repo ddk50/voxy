@@ -19,6 +19,7 @@
 #include <boost/thread.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+#include <boost/random.hpp>
 
 #include "sexpr.h"
 
@@ -201,7 +202,7 @@ int cmd_vncconnect(mainque_ptr main_que,
     string password = rest_token[1];    
 
     /* connect vnc */
-    logging(boost::str(format("VNCCONNECT host: %s password: %s") % host % password));    
+    logging(boost::str(format("VNCCONNECT host: %s, password: %s") % host % password));    
 
     rest_token.pop_front();    
     rest_token.pop_front();    
@@ -271,7 +272,6 @@ void sendback_mesg(socket_ptr sock,
                    mainque_ptr& main_que)    
 {
     mutex::scoped_lock lock(thread_sync);
-    cout << "size: " << main_que->size() << endl;    
     if (main_que->size() > 0) {        
         main_que->push_back("\n");        
         BOOST_FOREACH(string& v, *main_que) {            
@@ -359,20 +359,24 @@ void generator(mainque_ptr main_que)
 {
     function_requires<PixelLocatorConcept<locator_t> >();  
     gil_function_requires<StepIteratorConcept<locator_t::x_iterator> >();
+    point_t dims(1280, 720);    
 
-    point_t dims(1280, 720);
+    mt19937             gen(static_cast<unsigned long>(time(0)));    
+    uniform_smallint<>  dst(1, 30);    
+    variate_generator<mt19937&, uniform_smallint<> > rand(gen, dst);    
     
     while (1) {
-        cout << "main" << endl;        
         my_virt_view_t mandel(dims, locator_t(point_t(-2.0, 2.0),
                                               point_t(1.0, 1.7),
                                               deref_t(dims,
                                                       rgb8_pixel_t(255, 160, 0),
                                                       rgb8_pixel_t(0, 0, 0))));        
         // 2..1, -1.5..1.5
-        png_write_view("out-mandelbrot.png", mandel);
-        cout << "size: " << main_que->size() << endl;        
-        safe_pushback(main_que, "(:UPDATETILE \"test.png\" 1 2 3 4)");
+        png_write_view("out-mandelbrot.png", mandel);        
+
+        if (rand() % 10) {            
+            safe_pushback(main_que, "(:UPDATETILE \"test.png\" 1 2 3 4)");            
+        }        
         sleep(1);        
     }
 }
