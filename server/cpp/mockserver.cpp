@@ -64,7 +64,7 @@ struct mandelbrot_fn
 
         value_type ret;	
         for (int k = 0 ; k < num_channels<P>::value ; ++k) {	  
-            ret[k] = (typename channel_type<P>::type)(_in_color[k]*t + _out_color[k]*(1-t));
+            ret[k] = (typename channel_type<P>::type)(_in_color[k]*t + _out_color[k]*(1-t));            
         }
 	
         return ret;
@@ -84,35 +84,39 @@ private:
     }
 };
 
+typedef shared_ptr<std::deque<string> > mainque_ptr;
+
 static mutex thread_sync;
-void safe_popfront(deque<string>& deque)    
+void safe_popfront(mainque_ptr deque)    
 {
     mutex::scoped_lock lock(thread_sync);
-    deque.pop_front();    
+    deque->pop_front();    
 }
 
-void safe_pushback(deque<string>& deque, string& str)    
+void safe_pushback(mainque_ptr deque,                   
+                   string str)    
 {
     mutex::scoped_lock lock(thread_sync);    
-    deque.push_back(str);    
+    deque->push_back(str);    
 }
 
-void safe_pushback(deque<string>& deque, const char *str)    
+void safe_pushback(mainque_ptr deque,                   
+                   const char *str)    
 {
     mutex::scoped_lock lock(thread_sync);
     string t = str;    
-    deque.push_back(t);    
+    deque->push_back(t);    
 }
 
-void safe_clear(deque<string>& deque)
+void safe_clear(mainque_ptr deque)    
 {
     mutex::scoped_lock lock(thread_sync);    
-    deque.clear();    
+    deque->clear();    
 }
 
 struct command_map
 {  
-    int (*function)(deque<string>&, deque<string>&);    
+    int (*function)(mainque_ptr, deque<string>&);    
     const char* command;    
 };
 
@@ -126,7 +130,7 @@ void logging(string cmdtype)
          << endl;    
 }
 
-int cmd_updatetile(deque<string>& main_que,                   
+int cmd_updatetile(mainque_ptr main_que,                   
                    deque<string>& rest_token)    
 {
     int x = lexical_cast<int>(rest_token[0]);    
@@ -144,7 +148,7 @@ int cmd_updatetile(deque<string>& main_que,
     return rest_token.size();    
 }
 
-int cmd_chngresol(deque<string>& main_que,                  
+int cmd_chngresol(mainque_ptr main_que,                  
                   deque<string>& rest_token)    
 {
     if (rest_token.size() >= 2) {	  
@@ -154,7 +158,7 @@ int cmd_chngresol(deque<string>& main_que,
         logging(boost::str(format("CHNGRESOL (w, h) = (%d, %d)") % w % h));        
         
         rest_token.pop_front();
-        rest_token.pop_front();	
+        rest_token.pop_front();        
     } else {
         throw "too few argument for chngresol\n";        
     }
@@ -162,7 +166,7 @@ int cmd_chngresol(deque<string>& main_que,
     return rest_token.size();    
 }
 
-int cmd_mouseevent(deque<string>& main_que,                   
+int cmd_mouseevent(mainque_ptr main_que,                   
                    deque<string>& rest_token)    
 {
     if (rest_token.size() >= 2) {	
@@ -180,7 +184,7 @@ int cmd_mouseevent(deque<string>& main_que,
     }
 }
 
-int cmd_keyevent(deque<string>& main_que,                 
+int cmd_keyevent(mainque_ptr main_que,                 
                  deque<string>& rest_token)    
 {
     logging(boost::str(format("KEYVALUES values: %s") % rest_token[0]));    
@@ -190,7 +194,7 @@ int cmd_keyevent(deque<string>& main_que,
     return rest_token.size();    
 }
 
-int cmd_vncconnect(deque<string>& main_que,                   
+int cmd_vncconnect(mainque_ptr main_que,                   
                    deque<string>& rest_token)    
 {    
     string host = rest_token[0];  
@@ -205,7 +209,7 @@ int cmd_vncconnect(deque<string>& main_que,
     return rest_token.size();    
 }
 
-int cmd_vncdisconnect(deque<string>& main_que,                      
+int cmd_vncdisconnect(mainque_ptr main_que,                      
                       deque<string>& rest_token)    
 {    
     /* connect vnc */    
@@ -213,7 +217,7 @@ int cmd_vncdisconnect(deque<string>& main_que,
     return rest_token.size();    
 }
 
-int cmd_getupdate(deque<string>& main_que,                   
+int cmd_getupdate(mainque_ptr main_que,                  
                   deque<string>& rest_token)    
 {    
     return rest_token.size();    
@@ -229,7 +233,7 @@ static struct command_map cmap[] = {
     { cmd_vncdisconnect, ":VNCDISCONNECT" },    
 };
 
-void branching(deque<string>& main_que,               
+void branching(mainque_ptr main_que,               
                deque<string>& token_list)    
 {
     int canonical;        
@@ -252,11 +256,10 @@ void branching(deque<string>& main_que,
     
     if (!canonical) {
         cout << "unrecognized command: " << token_list[0] << endl;        
-        safe_clear(main_que);
-        safe_pushback(main_que, "(:ERROR)");        
+        safe_clear(main_que);        
     }    
     
-    token_list.clear();
+    token_list.clear();    
 }
 
 
@@ -265,22 +268,24 @@ typedef shared_ptr<tcp::socket> socket_ptr;
 typedef shared_ptr<sparser> sparser_ptr;
 
 void sendback_mesg(socket_ptr sock,                   
-                   deque<string>& main_que)    
+                   mainque_ptr& main_que)    
 {
-    if (main_que.size() > 0) {        
-        safe_pushback(main_que, "\n");        
-        BOOST_FOREACH(string& v, main_que) {        
+    mutex::scoped_lock lock(thread_sync);
+    cout << "size: " << main_que->size() << endl;    
+    if (main_que->size() > 0) {        
+        main_que->push_back("\n");        
+        BOOST_FOREACH(string& v, *main_que) {            
             asio::write(*sock, asio::buffer(v.c_str(), strlen(v.c_str())));            
         }        
     } else {
         string ret = "(:DONE)\n";        
         asio::write(*sock, asio::buffer(ret.c_str(), strlen(ret.c_str())));        
     }
-    safe_clear(main_que);    
+    main_que->clear();    
 }
 
-void session(socket_ptr sock, deque<string>& main_que)    
-{  
+void session(socket_ptr sock, mainque_ptr main_que)    
+{    
     sparser_ptr sp = sparser_ptr(new sparser());    
     string message_chunk;    
 
@@ -317,7 +322,7 @@ void session(socket_ptr sock, deque<string>& main_que)
 }
 
 void server(asio::io_service& io_service,            
-            short port, deque<string>& main_que)    
+            short port, mainque_ptr main_que)    
 {
     tcp::acceptor acc(io_service, tcp::endpoint(tcp::v4(), port));  
     while (1) {	
@@ -328,15 +333,14 @@ void server(asio::io_service& io_service,
 }
 
 int start_server(int argc, char *argv[],
-                 deque<string>& main_que)    
+                 mainque_ptr main_que)    
 {
     try {	
         if (argc != 2) {
             std::cerr << "Usage: blocking_tcp_echo_server <port>\n";	  
             return 0;            
         }        
-        boost::asio::io_service io_service;        
-	
+        boost::asio::io_service io_service;        	
         server(io_service, std::atoi(argv[1]), main_que);        
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << "\n";
@@ -351,7 +355,7 @@ typedef deref_t::point_t                    point_t;
 typedef virtual_2d_locator<deref_t, false>  locator_t;
 typedef image_view<locator_t>               my_virt_view_t;
 
-void generator(deque<string>& main_que)    
+void generator(mainque_ptr main_que)    
 {
     function_requires<PixelLocatorConcept<locator_t> >();  
     gil_function_requires<StepIteratorConcept<locator_t::x_iterator> >();
@@ -366,24 +370,26 @@ void generator(deque<string>& main_que)
                                                       rgb8_pixel_t(255, 160, 0),
                                                       rgb8_pixel_t(0, 0, 0))));        
         // 2..1, -1.5..1.5
-        png_write_view("out-mandelbrot.png", mandel);        
-        safe_pushback(main_que, "(:UPDATETILE \"test.png\" 1 2 3 4)");        
-        sleep(5);        
+        png_write_view("out-mandelbrot.png", mandel);
+        cout << "size: " << main_que->size() << endl;        
+        safe_pushback(main_que, "(:UPDATETILE \"test.png\" 1 2 3 4)");
+        sleep(1);        
     }
 }
 
 int start_generator(int argc, char *argv[],
-                    deque<string>& main_que)    
+                    mainque_ptr main_que)    
 {    
     boost::thread t(boost::bind(generator, main_que));
     return 1;    
 }
 
-int main(int argc, char *argv[])  
-{  
-    deque<string> main_que;    
 
-    if (!start_generator(argc, argv, main_que)) {
+int main(int argc, char *argv[])  
+{
+    mainque_ptr main_que(new deque<string>);    
+
+    if (!start_generator(argc, argv, main_que)) {        
         cout << "Could not start generator" << endl;
         exit(-1);        
     }
@@ -393,7 +399,7 @@ int main(int argc, char *argv[])
         exit(-1);        
     }
 
-    return 0;
+    return 0;    
 }
 
 void test()  
