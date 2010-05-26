@@ -1,13 +1,6 @@
 
 var g_imglist = {};
-//var cgi_path = "http://127.0.0.1/cgi-bin/qemu_vnc/vnc2.cgi";
-//var cgi_path = "http://tertes.homelinux.com/cgi-bin/qemu_vnc/vnc2.cgi";
-//var cgi_path = "http://tertes.homelinux.com/cgi-bin/qemu_vnc/vnc2.cgi";
-var cgi_path = "http://157.82.3.55/cgi-bin/qemu_vnc/vnc2.cgi";
-//var cgi_path = "http://157.82.3.55/cgi-bin/qemu_vnc/vnc2.cgi";
-//var cgi_path = "http://192.168.1.4/cgi-bin/qemu_vnc/vnc2.cgi";
-
-
+var cgi_path = "";
 
 var test_userid = 0;
 var xpos, ypos, bf;
@@ -50,9 +43,9 @@ function createXMLHttpRequest() {
   var XMLhttpObject = null;
   
   try {
-    XMLhttpObject = new XMLHttpRequest();
+      XMLhttpObject = new XMLHttpRequest();
   } catch ( e ) {
-    try {
+      try {
       XMLhttpObject = new ActiveXObject( "Msxml2.XMLHTTP" );
     } catch ( e ) {
       try {
@@ -245,10 +238,9 @@ function checkimgdata( paths ) {
 function getnewid() {
   
   var xmlhttp = createXMLHttpRequest();
-  var submit_cmd = "(getuser)";
 
   if(xmlhttp != null){
-	xmlhttp.open("GET", cgi_path + "?" + submit_cmd, true);
+	xmlhttp.open("GET", cgi_path + "/getuser", true);
 	xmlhttp.setRequestHeader("content-type",
 							 "application/x-www-form-urlencoded;charset=UTF-8");
 	
