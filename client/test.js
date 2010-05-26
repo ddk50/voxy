@@ -165,8 +165,7 @@ function load_slides(images, last_src, starttime)
 {  
     var ic = document.getElementById('lookup2');
     
-    for (i = 0 ; i < images.length ; i++) {
-	
+    for (i = 0 ; i < images.length ; i++) {	
 	var img      = images[i];
 	var need_add = 0;
 	var imgObj;
@@ -208,10 +207,9 @@ function checkimgdata(paths)
 {
     var xmlhttp = head_xmlhttp;
 
-    for (i = 0 ; i < paths.length ; i++ ) {
-	
+    for (i = 0 ; i < paths.length ; i++ ) {	
 	var img = paths[i];
-
+	
 	xmlhttp.open("HEAD", "http://tertes.homelinux.com/qemuvnchtml/" + paths.src, true);
 	xmlhttp.onreadystatechange = function() {
 	    if (xmlhttp.readyState == 4 && xmlhttp.status == 200
@@ -321,7 +319,7 @@ function release()
     var submit_cmd = "(release+" + test_userid + ")";
   
     if (xmlhttp != null) {
-	xmlhttp.open( "GET", cgi_path + "?" + submit_cmd );
+	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
 	xmlhttp.setRequestHeader("content-type",
 				 "application/x-www-form-urlencoded;charset=UTF-8");
 	xmlhttp.setRequestHeader("If-Modified-Since", "Thu, 01 Jun 1970 00:00:00 GMT");
@@ -343,7 +341,7 @@ function changeblocksize()
     var submit_cmd = "(syscmd+" + test_userid + "+chgblocklen+" + blocklen + ")";    
 
     if (xmlhttp != null) {
-	xmlhttp.open( "GET", cgi_path + "?" + submit_cmd );
+	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
 	xmlhttp.setRequestHeader("content-type",
 				 "application/x-www-form-urlencoded;charset=UTF-8");
 	xmlhttp.setRequestHeader("If-Modified-Since", "Thu, 01 Jun 1970 00:00:00 GMT");
@@ -382,16 +380,16 @@ function do_sendmouse()
     setTimeout("javascript:do_sendmouse();", mouse_interval);  
 }
 
-function do_sendkey() {
-    //sendkeyevt( kcode, kflag );
+function do_sendkey() 
+{
+    //sendkeyevt(kcode, kflag);
     //keyevent = 0;
-    //setTimeout( "javascript:do_sendkey();", mouse_interval );
+    //setTimeout("javascript:do_sendkey();", mouse_interval);
 }
 
-function sendmouseevt( x, y, mbf ) {
-  
-    if (xpos != x || ypos != y || bf != mbf) {
-	
+function sendmouseevt(x, y, mbf) 
+{
+    if (xpos != x || ypos != y || bf != mbf) {	
 	if (x < 0 || y < 0 || y == "undefined" || x == "undefined"
 	    || mbf == "undefined") {
 	    return;
@@ -401,34 +399,31 @@ function sendmouseevt( x, y, mbf ) {
 	var xmlhttp = mouse_xmlhttp;
 	var submit_cmd = "(mouse+" + test_userid + "+" + x + "+" + y + "+" + mbf + "+)";
 	
-	if (xmlhttp != null) {
-	  
-	    xmlhttp.open( "GET", cgi_path + "?" + submit_cmd );
-	    xmlhttp.setRequestHeader( "content-type",
-				      "application/x-www-form-urlencoded;charset=UTF-8");
-
+	if (xmlhttp != null) {	 
+	    xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
+	    xmlhttp.setRequestHeader("content-type",
+				     "application/x-www-form-urlencoded;charset=UTF-8");
 	    xmlhttp.onreadystatechange = function() {
-		//processReqChange( xmlhttp, start );
+		//processReqChange(xmlhttp, start);
 	    }
 	  
-	    xmlhttp.send( null );
+	    xmlhttp.send(null);
 	    xpos = x; ypos = y; bf = mbf;
 	}
     }
 }
 
-function sendkeyevt( keycode, flag ) 
+function sendkeyevt(keycode, flag) 
 {
-    //if ( keyevent ) {
-    var start = (new Date()).getTime();
-    var xmlhttp = flag ? keyevt_push_xmlhttp : keyevt_up_xmlhttp;
+    //if (keyevent) {
+    var start      = (new Date()).getTime();
+    var xmlhttp    = flag ? keyevt_push_xmlhttp : keyevt_up_xmlhttp;
     var submit_cmd = "(key+" + test_userid + "+" + keycode + "+" + flag + "+)";
 
     if (xmlhttp != null) {
-	xmlhttp.open( "GET", cgi_path + "?" + submit_cmd );
-	xmlhttp.setRequestHeader( "content-type",
-				  "application/x-www-form-urlencoded;charset=UTF-8");
-
+	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
+	xmlhttp.setRequestHeader("content-type",
+				 "application/x-www-form-urlencoded;charset=UTF-8");
 	xmlhttp.onreadystatechange = function() {
 	    //processReqChange( xmlhttp, start );
 	}
