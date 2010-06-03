@@ -2,7 +2,7 @@
 var g_imglist = {};
 var cgi_path = "";
 
-var test_userid = 0;
+var userid = 0;
 
 var xpos, ypos, bf;
 var nowx, nowy, nowmbf;
@@ -108,62 +108,9 @@ function processReqChange(req, starttime)
     }
 }
 
-function processNewID(req) 
-{  
-    if (req.readyState == 4 && req.status == 200
-	&& req.responseXML != null) {
-	
-	var ic = document.getElementById('lookup2');
-	var newid = 0;
-	var imgObj, txt;
-	var fb;
-	var ok;
-		
-	try {
-	    var nl  = req.responseXML.getElementsByTagName('setuserid');
-	    var nli = nl.item(0);
-	    
-	    newid = parseInt(nli.getAttribute('id').toString());
-	    ok = 1;
-	} catch (e) {
-	    newid = "Can't get my ID. Check your server";
-	    ok = 0;
-	}
-	
-	fb = ic.getElementsByTagName('img').item(0);
-	if (ok) {
-	    fb.style.visibility = 'hidden';
-	} else {
-	    fb.style.visibility = 'visible';
-	}
-
-	if (ic.style.background == "#000000") {
-	    // already issued user id;
-	    imgObj = ic.getElementById('h1');
-	    txt = document.createTextNode(newid);
-	} else {
-	    imgObj = document.createElement('h1');
-
-	    imgObj.style.position = "absolute";
-	    imgObj.style.left	  = "40%";
-	    imgObj.style.top	  = "40%";
-	    imgObj.id		  = newid;
-
-	    txt = document.createTextNode(newid);
-	    imgObj.appendChild(txt);
-
-	    ic.appendChild(imgObj);
-	    ic.style.background = "#000000";
-	    ic.style.color      = "#FFFFFF";
-	    
-	    test_userid = newid;
-	}
-    }
-}
-
 function load_slides(images, last_src, starttime) 
 {  
-    var ic = document.getElementById('lookup2');
+    var ic = $('#lookup2');
     
     for (i = 0 ; i < images.length ; i++) {	
 	var img      = images[i];
@@ -180,9 +127,7 @@ function load_slides(images, last_src, starttime)
 	    if (!terminated) {
 		imgObj.onload = function() {
 		    end = (new Date()).getTime();
-		    //document.getElementById('logarea').value += "(" + end + " " + starttime + ")\n";
 		    document.getElementById('logarea').value += ((end - starttime) + " ");
-		    //listen();
 		    setTimeout("javascript:listen();", 1);
 		}
 	    }
@@ -242,21 +187,30 @@ function checkimgdata(paths)
     }
 }
 
+function fail()
+{
+    $("#failed").show();
+}
+
 function getnewid() 
 {  
-    var xmlhttp = createXMLHttpRequest();
-    if(xmlhttp != null){
-	xmlhttp.open("GET", cgi_path + "/getuser", true);
-	xmlhttp.setRequestHeader("content-type",
-				 "application/x-www-form-urlencoded;charset=UTF-8");
-	
-	xmlhttp.onreadystatechange = function() {
-	    processNewID( xmlhttp );
-	}
-	
-	xmlhttp.send(null);
-    }
-    //xmlhttp = null;
+    $.getJSON(cgi_path + "/getuser", function(data) {
+        user_id = parseInt(data.id);
+                
+        // imgObj = document.createElement('h1');
+
+        // imgObj.style.position = "absolute";
+        // imgObj.style.left	  = "40%";
+        // imgObj.style.top	  = "40%";
+        // imgObj.id		  = newid;
+
+        // txt = document.createTextNode(newid);
+        // imgObj.appendChild(txt);
+
+        // ic.appendChild(imgObj);
+        // ic.style.background = "#000000";
+        // ic.style.color      = "#FFFFFF";
+    });
 }
 
 function start_UIListener() 
@@ -265,58 +219,32 @@ function start_UIListener()
     setTimeout("javascript:do_sendmouse();", 1000);
 }
 
-function execmachine(startlistener) 
+function execmachine() 
 {  
-    var xmlhttp = createXMLHttpRequest();
-    var submit_cmd = "(execemu+" + test_userid + ")";
-  
-    if (xmlhttp != null) {
-	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
-	xmlhttp.setRequestHeader("content-type",
-				 "application/x-www-form-urlencoded;charset=UTF-8");
-	
-	xmlhttp.onreadystatechange = function() {
-	    if (xmlhttp.readyState == 4 && xmlhttp.status == 200
-		 && xmlhttp.responseXML != null) {		
-		if ( startlistener ) {
-		    //start_UIListener();
-		    setTimeout("javascript:listen();", 1000);
-		} else {
-		    //setTimeout("javascript:test_load_slides();", 1000);
-		}
-		setTimeout("javascript:do_sendmouse();", 1000);
-	    }
-	}
-	xmlhttp.send(null);
-    }
+    $.getJSON(cgi_path + "/execemu/" + userid, function(data) {
+        if(data.status != "ok") return; // FIXME: handle error
+
+        
+        $(document).oneTime(1000, listen);
+        $(document).oneTime(1000, do_sendmouse);
+    });
 }
 
 function listen() 
 {
     var start = (new Date()).getTime();
-    var xmlhttp = listen_xmlhttp;
-
-    if (test_userid == 0)
-	return;
+    if (userid == 0) return;
   
-    var submit_cmd = "(listen+" + test_userid + ")";
-  
-    if (xmlhttp != null) {
-	xmlhttp.open( "GET", cgi_path + "?" + submit_cmd );
-	xmlhttp.setRequestHeader("content-type",
-				 "application/x-www-form-urlencoded;charset=UTF-8");	
-	xmlhttp.onreadystatechange = function() {
-	    processReqChange( xmlhttp, start );
-	}
-	xmlhttp.send(null);
-    }
+    $.getJSON(cgi_path + "/listen/" + userid, function(data) {
+        processReqChange( xmlhttp, start );
+    });
 }
 
 function release() 
 {
     var start      = (new Date()).getTime();
     var xmlhttp    = createXMLHttpRequest();
-    var submit_cmd = "(release+" + test_userid + ")";
+    var submit_cmd = "(release+" + userid + ")";
   
     if (xmlhttp != null) {
 	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
@@ -326,7 +254,7 @@ function release()
 	xmlhttp.onreadystatechange = function() {
 	    if (xmlhttp.readyState == 4 && xmlhttp.status == 200
 		 && xmlhttp.responseXML != null) {
-		test_userid = 0; terminated = 1;
+		userid = 0; terminated = 1;
 	    }
 	}
 	xmlhttp.send(null);
@@ -338,7 +266,7 @@ function changeblocksize()
     var start      = (new Date()).getTime();
     var xmlhttp    = createXMLHttpRequest();
     var blocklen   = parseInt(document.getElementById('blocklen').value);
-    var submit_cmd = "(syscmd+" + test_userid + "+chgblocklen+" + blocklen + ")";    
+    var submit_cmd = "(syscmd+" + userid + "+chgblocklen+" + blocklen + ")";    
 
     if (xmlhttp != null) {
 	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
@@ -348,7 +276,7 @@ function changeblocksize()
 	xmlhttp.onreadystatechange = function() {
 	    if ( xmlhttp.readyState == 4 && xmlhttp.status == 200
 		 && xmlhttp.responseXML != null ) {
-		//test_userid = 0; terminated = 1;
+		//userid = 0; terminated = 1;
 		//start_UIListener();
 	    }
 	}
@@ -358,7 +286,7 @@ function changeblocksize()
 
 function change_intervals() 
 {
-    if (test_userid == 0)
+    if (userid == 0)
 	return;
   
     release();
@@ -373,7 +301,7 @@ function change_intervals()
 
 function do_sendmouse() 
 {
-    if (test_userid == 0)
+    if (userid == 0)
 	return;
 
     sendmouseevt(nowx, nowy, nowmbf);
@@ -397,7 +325,7 @@ function sendmouseevt(x, y, mbf)
 	
 	var start = (new Date()).getTime();
 	var xmlhttp = mouse_xmlhttp;
-	var submit_cmd = "(mouse+" + test_userid + "+" + x + "+" + y + "+" + mbf + "+)";
+	var submit_cmd = "(mouse+" + userid + "+" + x + "+" + y + "+" + mbf + "+)";
 	
 	if (xmlhttp != null) {	 
 	    xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
@@ -418,7 +346,7 @@ function sendkeyevt(keycode, flag)
     //if (keyevent) {
     var start      = (new Date()).getTime();
     var xmlhttp    = flag ? keyevt_push_xmlhttp : keyevt_up_xmlhttp;
-    var submit_cmd = "(key+" + test_userid + "+" + keycode + "+" + flag + "+)";
+    var submit_cmd = "(key+" + userid + "+" + keycode + "+" + flag + "+)";
 
     if (xmlhttp != null) {
 	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
