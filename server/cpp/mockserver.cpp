@@ -423,3 +423,14 @@ void test()
         cout << v << endl;        
     }  
 }
+
+/*  
+  {
+  view_t cropped(subimage_view(view(lowpass), CROP_X, CROP_Y, CROP_W, CROP_H));
+  const view_t& v(cropped);
+  color_converted_view_type<view_t, gray8_pixel_t, convert_to_gray8>::type ccv(color_converted_view<gray8_pixel_t, view_t, convert_to_gray8>(v, convert_to_gray8()));
+
+  ProgressDisp d("writing preprocessed output");
+  png_write_view("lowpass.png", ccv);
+  }  
+*/
