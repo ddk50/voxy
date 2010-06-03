@@ -9,33 +9,15 @@
       margin: 0px;
       padding: 0px;
       }
-
-      .contextMenus {position:absolute; background-color:#cfcfcf; 
-      border-style:solid; border-width:1px; 
-      border-color:#EFEFEF #505050 #505050 #EFEFEF; 
-      visibility:hidden}
-      
-      .menuItem {cursor:pointer; font-size:9pt; 
-      font-family:Arial, Helvetica, sans-serif; 
-      padding-left:5px; color:black; 
-      background-color:transparent; 
-      text-decoration:none}
-      
-      .menuItemOn {cursor:pointer; font-size:9pt; 
-      font-family:Arial, Helvetica, sans-serif; 
-      padding-left:5px; color:red; 
-      background-color:yellow; 
-      text-decoration:underline}
-      
-      .contextEntry {font-weight:bold; color:darkred; cursor:pointer}
-      
     </style>
-    <script src="test.js" type="text/javascript"></script>
+    <script src="/jquery-1.4.2.min.js" type="text/javascript"></script>
+    <script src="/jquery.timers-1.2.js" type="text/javascript"></script>
+    <script src="/test.js" type="text/javascript"></script>
   </head>
-  <body onload="initContextMenus()">
+  <body>
     <input type="button" value="stop" onClick="stop_listen()" />
     <input type="button" value="getuser" onClick="getnewid()" />
-    <input type="button" value="start" onClick="execmachine(1)" />
+    <input type="button" value="start" onClick="execmachine()" />
     interval:<input type="text" id="interval" size="10" value="100">
     -- mouse:<input type="text" id="mouseinterval" size="5" value="50">
     <input type="button" value="apply" onClick="change_intervals()" />
@@ -49,7 +31,7 @@
 		  overflow: hidden;
 		  text-align: center;
 		  align: center;"
-	 id="lookup2" class="contextEntry">
+	 id="canvas" class="contextEntry">
       
       <img style="border: 0;
 		  width: 100%;
