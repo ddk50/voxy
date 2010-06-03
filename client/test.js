@@ -424,9 +424,9 @@ function sendkeyevt(keycode, flag)
 	xmlhttp.open("GET", cgi_path + "?" + submit_cmd);
 	xmlhttp.setRequestHeader("content-type",
 				 "application/x-www-form-urlencoded;charset=UTF-8");
-	xmlhttp.onreadystatechange = function() {
-	    //processReqChange( xmlhttp, start );
-	}
+	xmlhttp.onreadystatechange = function() {	
+	    //processReqChange( xmlhttp, start );		
+	}	
 	xmlhttp.send( null );	
     }
     //}
