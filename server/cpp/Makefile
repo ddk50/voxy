@@ -1,4 +1,4 @@
-CPP = gcc
+CPP = g++
 CPPFLAGS = -Wall -O0 -g
 LDFLAGS = -lboost_thread -lboost_system -lpthread -lpng -ljpeg -g
 INCLUDE = -I./include

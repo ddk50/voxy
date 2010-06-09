@@ -20,6 +20,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 #include <boost/random.hpp>
+#include <boost/math/common_factor.hpp>
 
 #include "sexpr.h"
 
@@ -355,28 +356,42 @@ typedef deref_t::point_t                    point_t;
 typedef virtual_2d_locator<deref_t, false>  locator_t;
 typedef image_view<locator_t>               my_virt_view_t;
 
+#define IMAGE_WIDTH  1280
+#define IMAGE_HEIGHT 720
+
 void generator(mainque_ptr main_que)    
 {
     function_requires<PixelLocatorConcept<locator_t> >();  
     gil_function_requires<StepIteratorConcept<locator_t::x_iterator> >();
-    point_t dims(1280, 720);    
-
+    point_t dims(IMAGE_WIDTH, IMAGE_HEIGHT);
+    
     mt19937             gen(static_cast<unsigned long>(time(0)));    
     uniform_smallint<>  dst(1, 30);    
     variate_generator<mt19937&, uniform_smallint<> > rand(gen, dst);    
+
+    int x = 0;
+    int y = 0;    
+    int width  = boost::math::gcd(IMAGE_WIDTH, IMAGE_HEIGHT);    
+    int height = boost::math::gcd(IMAGE_WIDTH, IMAGE_HEIGHT);    
     
     while (1) {
         my_virt_view_t mandel(dims, locator_t(point_t(-2.0, 2.0),
                                               point_t(1.0, 1.7),
                                               deref_t(dims,
                                                       rgb8_pixel_t(255, 160, 0),
-                                                      rgb8_pixel_t(0, 0, 0))));        
+                                                      rgb8_pixel_t(0, 0, 0))));
+        
+        /* cropped */        
+        //        subimage_view(view(mandel), x, y, width, height);
+        png_write_view("1.png", subimage_view(mandel, x, y, width, height));        
+        
         // 2..1, -1.5..1.5
         png_write_view("out-mandelbrot.png", mandel);        
 
         if (rand() % 10) {            
             safe_pushback(main_que, "(:UPDATETILE \"test.png\" 1 2 3 4)");            
-        }        
+        }
+        
         sleep(1);        
     }
 }
@@ -423,6 +438,8 @@ void test()
         cout << v << endl;        
     }  
 }
+
+
 
 /*  
   {
