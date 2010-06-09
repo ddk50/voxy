@@ -86,9 +86,47 @@ private:
     }
 };
 
+typedef mandelbrot_fn<rgb8_pixel_t>         deref_t;
+typedef deref_t::point_t                    point_t;
+typedef virtual_2d_locator<deref_t, false>  locator_t;
+typedef image_view<locator_t>               my_virt_view_t;
+
+#define IMAGE_WIDTH  1280
+#define IMAGE_HEIGHT 800
+
+class imgtile
+{
+private:
+    my_virt_view_t view;
+
+public:
+    string fname;
+    int x, y;
+    int width, height;
+    
+public:
+    void write_png(void)        
+    {        
+        png_write_view(fname, subimage_view(view, x, y, width, height));        
+    }
+    
+    imgtile(my_virt_view_t view,            
+            int x, int y,
+            int width, int height)        
+    {
+        this->x = x; this->y = y;
+        this->width = width; this->height = height;        
+        this->view = view;        
+        fname = boost::str(boost::format("%d.png") % rand());        
+    }        
+    ~imgtile() {};    
+};
+
 typedef shared_ptr<std::deque<string> > mainque_ptr;
+typedef shared_ptr<imgtile> imgtile_ptr;
 
 static mutex thread_sync;
+
 void safe_popfront(mainque_ptr deque)    
 {
     mutex::scoped_lock lock(thread_sync);
@@ -351,58 +389,52 @@ int start_server(int argc, char *argv[],
     return 1;    
 }
 
-typedef mandelbrot_fn<rgb8_pixel_t>         deref_t;
-typedef deref_t::point_t                    point_t;
-typedef virtual_2d_locator<deref_t, false>  locator_t;
-typedef image_view<locator_t>               my_virt_view_t;
-
-#define IMAGE_WIDTH  1280
-#define IMAGE_HEIGHT 720
-
 void generator(mainque_ptr main_que)    
 {
     function_requires<PixelLocatorConcept<locator_t> >();  
     gil_function_requires<StepIteratorConcept<locator_t::x_iterator> >();
-    point_t dims(IMAGE_WIDTH, IMAGE_HEIGHT);
-    
+    point_t dims(IMAGE_WIDTH, IMAGE_HEIGHT);    
+
     mt19937             gen(static_cast<unsigned long>(time(0)));    
-    uniform_smallint<>  dst(1, 30);    
+    uniform_smallint<>  dst(1, 30);
     variate_generator<mt19937&, uniform_smallint<> > rand(gen, dst);    
-
-    int x = 0;
-    int y = 0;    
-    int width  = boost::math::gcd(IMAGE_WIDTH, IMAGE_HEIGHT);    
-    int height = boost::math::gcd(IMAGE_WIDTH, IMAGE_HEIGHT);    
     
-    while (1) {
-        my_virt_view_t mandel(dims, locator_t(point_t(-2.0, 2.0),
-                                              point_t(1.0, 1.7),
-                                              deref_t(dims,
-                                                      rgb8_pixel_t(255, 160, 0),
-                                                      rgb8_pixel_t(0, 0, 0))));
-        
-        /* cropped */        
-        //        subimage_view(view(mandel), x, y, width, height);
-        png_write_view("1.png", subimage_view(mandel, x, y, width, height));        
-        
-        // 2..1, -1.5..1.5
-        png_write_view("out-mandelbrot.png", mandel);        
+    int c_width  = boost::math::gcd(IMAGE_WIDTH, IMAGE_HEIGHT);    
+    int c_height = boost::math::gcd(IMAGE_WIDTH, IMAGE_HEIGHT);
 
-        if (rand() % 10) {            
-            safe_pushback(main_que, "(:UPDATETILE \"test.png\" 1 2 3 4)");            
-        }
-        
-        sleep(1);        
+    cout << boost::format("tile width: %d\ntile height: %d\n") % c_width % c_height;    
+
+    deque<imgtile_ptr>  imglist;    
+    my_virt_view_t      mandel(dims, locator_t(point_t(-2.0, 2.0),
+                                               point_t(1.0, 1.7),
+                                               deref_t(dims,
+                                                       rgb8_pixel_t(255, 160, 0),
+                                                       rgb8_pixel_t(0, 0, 0))));    
+
+    for (int x = 0 ; x < IMAGE_WIDTH ; x += c_width) {        
+        for (int y = 0 ; y < IMAGE_HEIGHT ; y += c_height) {            
+            cout << boost::format("tile [%d, %d]\n") % (x / c_width) % (y / c_height);            
+            imglist.push_back(imgtile_ptr(new imgtile(mandel, x, y, c_width, c_height)));            
+        }        
     }
+    
+    while (1) {        
+        BOOST_FOREACH(imgtile_ptr& v, imglist) {            
+            (*v).write_png();
+            safe_pushback(main_que,
+                          boost::str(boost::format("(:UPDATETILE \"%s\" %d %d %d %d)")
+                                     % (*v).fname % (*v).x % (*v).y % (*v).width % (*v).height));            
+        }        
+        sleep(1);        
+    }    
 }
 
 int start_generator(int argc, char *argv[],
                     mainque_ptr main_que)    
-{    
+{
     boost::thread t(boost::bind(generator, main_que));
     return 1;    
 }
-
 
 int main(int argc, char *argv[])  
 {

@@ -14,6 +14,7 @@ mserver: $(OBJS)
 clean:
 	rm -f *.o
 	rm -f $(MSERVER)
+	rm -f *.png
 
 sexpr.o: include/sexpr.h
 mockserver.o: include/sexpr.h
