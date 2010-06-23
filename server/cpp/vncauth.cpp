@@ -64,28 +64,28 @@ uint8_t fixedkey[8] = {23,82,107,6,35,78,88,7};
 int vncEncryptAndStorePasswd(char *passwd, char *fname)
 {
   
-  FILE *fp;
-  uint8_t encryptedPasswd[8];
+    FILE *fp;
+    uint8_t encryptedPasswd[8];
 
-  if ((fp = fopen(fname, "w")) == NULL)
-    return 1;
+    if ((fp = fopen(fname, "w")) == NULL)
+        return 1;
 
-  chmod(fname, S_IRUSR|S_IWUSR);
+    chmod(fname, S_IRUSR|S_IWUSR);
 
-  /* pad password with nulls */
-  for (uint32_t i=0; i < 8; i++)
-    encryptedPasswd[i] = (i < strlen(passwd)) ? passwd[i] : '\0';
+    /* pad password with nulls */
+    for (uint32_t i=0; i < 8; i++)
+        encryptedPasswd[i] = (i < strlen(passwd)) ? passwd[i] : '\0';
 
-  /* Do encryption in-place - this way we overwrite our copy of the plaintext
-     password */
-  deskey(fixedkey, EN0);
+    /* Do encryption in-place - this way we overwrite our copy of the plaintext
+       password */
+    deskey(fixedkey, EN0);
 
-  des(encryptedPasswd, encryptedPasswd);
+    des(encryptedPasswd, encryptedPasswd);
 
-  for (int i=0; i < 8; i++)
-    putc(encryptedPasswd[i], fp);
-  fclose(fp);
-  return 0;
+    for (int i=0; i < 8; i++)
+        putc(encryptedPasswd[i], fp);
+    fclose(fp);
+    return 0;
 }
 
 /*
@@ -95,26 +95,26 @@ int vncEncryptAndStorePasswd(char *passwd, char *fname)
  */
 char * vncDecryptPasswdFromFile(char *fname)
 {
-  FILE *fp;
-  uint8_t *passwd = new uint8_t[9];
+    FILE *fp;
+    uint8_t *passwd = new uint8_t[9];
 
-  if ((fp = fopen(fname, "r")) == NULL)
-    return NULL;
+    if ((fp = fopen(fname, "r")) == NULL)
+        return NULL;
 
-  for (int i=0; i < 8; i++) {
-    int ch = getc(fp);
-    if (ch == EOF) {
-      fclose(fp);
-      return NULL;
+    for (int i=0; i < 8; i++) {
+        int ch = getc(fp);
+        if (ch == EOF) {
+            fclose(fp);
+            return NULL;
+        }
+        passwd[i] = ch;
     }
-    passwd[i] = ch;
-  }
-  fclose(fp);
-  deskey(fixedkey, DE1);
-  des(passwd, passwd);
-  passwd[8] = '\0';
+    fclose(fp);
+    deskey(fixedkey, DE1);
+    des(passwd, passwd);
+    passwd[8] = '\0';
 
-  return (char *) passwd;
+    return (char *) passwd;
 }
 
 /*
@@ -122,13 +122,13 @@ char * vncDecryptPasswdFromFile(char *fname)
  */
 void vncEncryptBytes(uint8_t *bytes, char *passwd)
 {
-  uint8_t key[8];
+    uint8_t key[8];
 
-  /* key is simply password padded with nulls */
-  for (uint32_t i=0; i < 8; i++)
-    key[i] = (i < strlen(passwd)) ? passwd[i] : '\0';
-  deskey(key, EN0);
+    /* key is simply password padded with nulls */
+    for (uint32_t i=0; i < 8; i++)
+        key[i] = (i < strlen(passwd)) ? passwd[i] : '\0';
+    deskey(key, EN0);
 
-  for (int i=0; i < CHALLENGESIZE; i += 8)
-    des(bytes+i, bytes+i);
+    for (int i=0; i < CHALLENGESIZE; i += 8)
+        des(bytes+i, bytes+i);
 }

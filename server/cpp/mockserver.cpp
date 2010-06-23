@@ -212,7 +212,7 @@ int cmd_keyevent(mainque_ptr main_que,
     logging(boost::str(format("KEYVALUES values: %s") % rest_token[0]));    
     
     rest_token.pop_front();
-    printf("test %d\n", rest_token.size());    
+    trace(DBG_INIT, "test %d\n", rest_token.size());    
     return rest_token.size();    
 }
 
@@ -277,8 +277,7 @@ void branching(mainque_ptr main_que,
     }
     
     if (!canonical) {
-        cout << "unrecognized command: " << token_list[0] << endl;
-        error("unrecognized command: ");        
+        error("unrecognized command: %s", token_list[0].c_str());        
         safe_clear(main_que);        
     }    
     
