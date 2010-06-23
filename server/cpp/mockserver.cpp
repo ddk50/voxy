@@ -8,11 +8,6 @@
 #include <boost/gil/extension/io/jpeg_io.hpp>
 #include <boost/gil/extension/io/png_io.hpp>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/local_time_adjustor.hpp>
-#include <boost/date_time/c_local_time_adjustor.hpp>
-#include <boost/date_time/time_facet.hpp>
-
 #include <boost/bind.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/asio.hpp>
@@ -23,15 +18,12 @@
 #include <boost/math/common_factor.hpp>
 
 #include "sexpr.h"
+#include "global.hpp"
 
 using boost::asio::ip::tcp;
 using namespace boost::gil;
 using namespace boost;
 using namespace std;
-
-using boost::posix_time::ptime;
-using boost::posix_time::us_dst;
-using boost::posix_time::second_clock;
 
 /* Models a Unary Function */
 template <typename P>   /* Models PixelValueConcept */
@@ -160,16 +152,6 @@ struct command_map
     const char* command;    
 };
 
-typedef boost::date_time::c_local_adjustor<ptime> local_adj;
-void logging(string cmdtype)    
-{
-    ptime t = second_clock::universal_time();    
-    ptime tt = local_adj::utc_to_local(t);    
-
-    cout << "[" << tt << "]" << " ACCEPT " << cmdtype        
-         << endl;    
-}
-
 int cmd_updatetile(mainque_ptr main_que,                   
                    deque<string>& rest_token)    
 {
@@ -295,7 +277,8 @@ void branching(mainque_ptr main_que,
     }
     
     if (!canonical) {
-        cout << "unrecognized command: " << token_list[0] << endl;        
+        cout << "unrecognized command: " << token_list[0] << endl;
+        error("unrecognized command: ");        
         safe_clear(main_que);        
     }    
     
@@ -376,7 +359,7 @@ int start_server(int argc, char *argv[],
 {
     try {	
         if (argc != 2) {
-            std::cerr << "Usage: blocking_tcp_echo_server <port>\n";	  
+            error("Usage: blocking_tcp_echo_server <port>");            
             return 0;            
         }        
         boost::asio::io_service io_service;        	
@@ -441,12 +424,12 @@ int main(int argc, char *argv[])
     mainque_ptr main_que(new deque<string>);    
 
     if (!start_generator(argc, argv, main_que)) {        
-        cout << "Could not start generator" << endl;
+        error("Could not start generator");        
         exit(-1);        
     }
     
     if (!start_server(argc, argv, main_que)) {
-        cout << "Could not start server" << endl;
+        error("Could not start server");        
         exit(-1);        
     }
 
@@ -470,8 +453,6 @@ void test()
         cout << v << endl;        
     }  
 }
-
-
 
 /*  
   {
