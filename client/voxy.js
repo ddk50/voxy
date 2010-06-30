@@ -17,28 +17,33 @@ function VoXYPanel(jqelem, name)
 	// リスニングしているかどうか
 	this.listening = false;
 	// セッションID
-	this.session_id = 0;
+	this.session_id = -1;
 	
-	this.viewbody.width(640);
-	this.viewbody.height(480);
-	this.viewbody.data('panelobj', this);
+	this.mouse_moved = false;
 	
-	this.viewbody.bind('click', this, function(e){e.data.OnClick(e)});
-	
+	this.viewbody
+		.width(640).height(480)
+		.data('panelobj', this)
+		.bind('mousedown', this, function(e){e.data.OnMouseDown(e)})
+		.bind('mouseup', this, function(e){e.data.OnMouseUp(e)})
+		.bind('mousemove', this, function(e){e.data.OnMouseMove(e)})
+	;
+
+	$(window)
+		.bind('keydown', this, function(e){e.data.OnKeyDown(e)})
+		.bind('keyup', this, function(e){e.data.OnKeyUp(e)})
+	;
+
 	this.toolbar.html("<button class='voxy_toolbar_disconnect'>切断</button>");
 	this.toolbar.children(".voxy_toolbar_disconnect").bind(
-		'click', this, function(e){e.data.Disconnect()});
+		'click', this, function(e){e.data.Disconnect()}
+	);
 
 	WriteLog("Initialized");
 }
 
 VoXYPanel.prototype = {
-	// パネルがクリックされたときのイベント
-	OnClick: function(event)
-	{
-
-	},
-
+	
 	// ログインフォームを表示
 	ShowLoginForm: function()
 	{
@@ -75,11 +80,11 @@ VoXYPanel.prototype = {
 	{
 		if(data.stat == 'ok')
 		{
+			this.viewbody.html("");
 			this.session_id = data.session_id;
 			this.ServerMessage(data.smsg);
 			this.listening = true;
 			this.SetListenTimer();
-			this.viewbody.html("");
 		}
 	},
 
@@ -116,6 +121,12 @@ VoXYPanel.prototype = {
 		if(!this.listening)
 			return;
 		
+		if(this.mouse_moved)
+		{
+			this.mouse_moved = false;
+			this.SendMouseEvent(-1, -1);
+		}
+		
 		$.ajax({
 			url: '/listen',
 			data: {
@@ -129,6 +140,73 @@ VoXYPanel.prototype = {
 			}
 		});
 
+	},
+	
+	SendMouseEvent: function(btn, btn_state)
+	{
+		if(!this.listening)
+			return;
+		var event_data = {
+				session_id: this.session_id,
+				x: this.mouse_x,
+				y: this.mouse_y,
+				btn: btn,
+				btn_state: btn_state
+			};
+		$.ajax({
+			url: '/mouseevent',
+			data: event_data,
+			dataType: 'json',
+			context: this,
+			success: function(data){
+				this.ServerMessage(data.smsg);
+			}
+		});
+
+	},
+	SendKeyEvent: function(key_code, key_state)
+	{
+		if(!this.listening)
+			return;
+		var event_data = {
+				session_id: this.session_id,
+				key_code: key_code,
+				key_state: key_state
+			};
+		$.ajax({
+			url: '/keyevent',
+			data: event_data,
+			dataType: 'json',
+			context: this,
+			success: function(data){
+				this.ServerMessage(data.smsg);
+			}
+		});
+
+	},
+
+
+	OnMouseMove: function(event)
+	{
+		this.mouse_x = event.pageX - this.viewbody[0].offsetLeft;
+		this.mouse_y = event.pageY - this.viewbody[0].offsetTop;
+		this.mouse_moved = true;
+	},
+	OnMouseDown: function(event)
+	{
+		this.SendMouseEvent(event.which, 1);
+	},
+	OnMouseUp: function(event)
+	{
+		this.SendMouseEvent(event.which, 0);
+	},
+	OnKeyDown: function(event)
+	{
+		this.SendKeyEvent(event.keyCode, 1);
+	},
+	OnKeyUp: function(event)
+	{
+		this.SendKeyEvent(event.keyCode, 0);
 	},
 	
 	// サーバーからの更新情報を読み取る
