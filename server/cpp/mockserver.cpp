@@ -17,74 +17,11 @@
 #include <boost/random.hpp>
 #include <boost/math/common_factor.hpp>
 
-#include "sexpr.h"
+#include <string.h>
+
+#include "sexpr.hpp"
 #include "global.hpp"
-
-using boost::asio::ip::tcp;
-using namespace boost::gil;
-using namespace boost;
-using namespace std;
-
-/* Models a Unary Function */
-template <typename P>   /* Models PixelValueConcept */
-struct mandelbrot_fn
-{  
-    typedef point2<ptrdiff_t>    point_t;
-    typedef mandelbrot_fn        const_t;
-    typedef P                    value_type;
-    typedef value_type           reference;
-    typedef value_type           const_reference;
-    typedef point_t              argument_type;
-    typedef reference            result_type;
-  
-    BOOST_STATIC_CONSTANT(bool, is_mutable = false);  
-  
-    value_type                    _in_color,_out_color;
-    point_t                       _img_size;  
-  
-    static const int MAX_ITER = 100;  /* max number of iterations */ 
-
-    mandelbrot_fn() {}
-    mandelbrot_fn(const point_t& sz, const value_type& in_color, const value_type& out_color) :
-        _in_color(in_color), _out_color(out_color), _img_size(sz){}  
-
-    result_type operator()(const point_t& p) const        
-    {        
-        // normalize the coords to (-2..1, -1.5..1.5)
-        // (actually make y -1.0..2 so it is asymmetric, so we can verify some view factory methods)
-        double t = get_num_iter(point2<double>(p.x / (double)_img_size.x * 3.0 - 2,
-                                               p.y / (double)_img_size.y * 3.0 - 1.0f));//1.5f));	
-        t = pow(t, 0.2);	
-
-        value_type ret;	
-        for (int k = 0 ; k < num_channels<P>::value ; ++k) {	  
-            ret[k] = (typename channel_type<P>::type)(_in_color[k]*t + _out_color[k]*(1-t));            
-        }
-	
-        return ret;
-    }
-    
-private:
-    double get_num_iter(const point2<double>& p) const
-    {        
-        point2<double> Z(0, 0);	
-        for (int i = 0 ; i < MAX_ITER ; ++i) {	  
-            Z = point2<double>(Z.x*Z.x - Z.y*Z.y + p.x, 2.0*Z.x*Z.y + p.y);	  
-            if (Z.x * Z.x + Z.y * Z.y > 4.0) {		
-                return i / (double)MAX_ITER;                
-            }	  
-        }
-        return 0;	
-    }
-};
-
-typedef mandelbrot_fn<rgb8_pixel_t>         deref_t;
-typedef deref_t::point_t                    point_t;
-typedef virtual_2d_locator<deref_t, false>  locator_t;
-typedef image_view<locator_t>               my_virt_view_t;
-
-#define IMAGE_WIDTH  1280
-#define IMAGE_HEIGHT 800
+#include "common.hpp"
 
 class imgtile
 {
@@ -114,7 +51,6 @@ public:
     ~imgtile() {};    
 };
 
-typedef shared_ptr<std::deque<string> > mainque_ptr;
 typedef shared_ptr<imgtile> imgtile_ptr;
 
 static mutex thread_sync;
@@ -148,17 +84,18 @@ void safe_clear(mainque_ptr deque)
 
 struct command_map
 {  
-    int (*function)(mainque_ptr, deque<string>&);    
+    int (*function)(session_ptr&);    
     const char* command;    
 };
 
-int cmd_updatetile(mainque_ptr main_que,                   
-                   deque<string>& rest_token)    
+int cmd_updatetile(session_ptr &s)    
 {
+    deque<string>& rest_token = s->rest_token;    
+    
     int x = lexical_cast<int>(rest_token[0]);    
     int y = lexical_cast<int>(rest_token[1]);
     int w = lexical_cast<int>(rest_token[2]);
-    int h = lexical_cast<int>(rest_token[3]);
+    int h = lexical_cast<int>(rest_token[3]);    
     
     logging(boost::str(format("UPDATETILE (x, y, w, h) = (%d, %d, %d, %d)") % x % y % w % h));    
   
@@ -170,9 +107,10 @@ int cmd_updatetile(mainque_ptr main_que,
     return rest_token.size();    
 }
 
-int cmd_chngresol(mainque_ptr main_que,                  
-                  deque<string>& rest_token)    
+int cmd_chngresol(session_ptr &s)    
 {
+    deque<string>& rest_token = s->rest_token;    
+    
     if (rest_token.size() >= 2) {	  
         int w = lexical_cast<int>(rest_token[0]);
         int h = lexical_cast<int>(rest_token[1]);
@@ -188,9 +126,10 @@ int cmd_chngresol(mainque_ptr main_que,
     return rest_token.size();    
 }
 
-int cmd_mouseevent(mainque_ptr main_que,                   
-                   deque<string>& rest_token)    
+int cmd_mouseevent(session_ptr &s)    
 {
+    deque<string>& rest_token = s->rest_token;    
+    
     if (rest_token.size() >= 2) {	
         int x = lexical_cast<int>(rest_token[0]);
         int y = lexical_cast<int>(rest_token[1]);
@@ -198,7 +137,7 @@ int cmd_mouseevent(mainque_ptr main_que,
         logging(boost::str(format("MOUSEEVENT (x, y) = (%d, %d)") % x % y));        
 
         rest_token.pop_front();
-        rest_token.pop_front();	
+        rest_token.pop_front();        
 	
         return rest_token.size();        
     } else {
@@ -206,9 +145,10 @@ int cmd_mouseevent(mainque_ptr main_que,
     }
 }
 
-int cmd_keyevent(mainque_ptr main_que,                 
-                 deque<string>& rest_token)    
+int cmd_keyevent(session_ptr &s)    
 {
+    deque<string>& rest_token = s->rest_token;    
+    
     logging(boost::str(format("KEYVALUES values: %s") % rest_token[0]));    
     
     rest_token.pop_front();
@@ -216,14 +156,34 @@ int cmd_keyevent(mainque_ptr main_que,
     return rest_token.size();    
 }
 
-int cmd_vncconnect(mainque_ptr main_que,                   
-                   deque<string>& rest_token)    
-{    
-    string host = rest_token[0];  
-    string password = rest_token[1];    
+int cmd_vncconnect(session_ptr &s)    
+{
+    deque<string>& rest_token = s->rest_token;    
+    string hoststr = rest_token[0];    
+    string password = rest_token[1];
+    char buffer[1000];
+    const char *delim = ":";    
+    char *ctx;    
+    char *host_ptr, *port_ptr;
 
-    /* connect vnc */
-    logging(boost::str(format("VNCCONNECT host: %s, password: %s") % host % password));    
+    std::strcpy(buffer, hoststr.c_str());
+
+    host_ptr = strtok_r(buffer, delim, &ctx);    
+    port_ptr = strtok_r(NULL, delim, &ctx);    
+
+    string host(host_ptr);    
+    int port = lexical_cast<int>(port_ptr);
+
+    logging("VNCCONNECT ... ");    
+
+    if (s->VNCConnect(host, port, password)) {
+        /* connect vnc */
+        logging(boost::str(format("  establish VNCCONNECT (host: %s, port: %d, password: %s)")
+                           % host % port % password));        
+    } else {
+        logging(boost::str(format("  Could not establish VNCCOONECT (host: %s, port: %d, password: %s)")
+                           % host % port % password));        
+    }    
 
     rest_token.pop_front();    
     rest_token.pop_front();    
@@ -231,17 +191,31 @@ int cmd_vncconnect(mainque_ptr main_que,
     return rest_token.size();    
 }
 
-int cmd_vncdisconnect(mainque_ptr main_que,                      
-                      deque<string>& rest_token)    
-{    
+int cmd_vncdisconnect(session_ptr &s)    
+{
+    deque<string>& rest_token = s->rest_token;    
+
+    s->VNCdisconnect();    
+    
     /* connect vnc */    
     logging(boost::str(format("VNCDISCONNECT")));    
+    
     return rest_token.size();    
 }
 
-int cmd_getupdate(mainque_ptr main_que,                  
-                  deque<string>& rest_token)    
-{    
+int cmd_getupdate(session_ptr &s)    
+{
+    deque<string>& rest_token = s->rest_token;
+    VNCClient_ptr vnc;    
+    
+    if (!s->vncconnected) {        
+        logging(boost::str(format("GETUPDATE Nothing to do")));        
+        goto getout;
+    } else {
+        logging(boost::str(format("GETUPDATE")));        
+    }    
+
+ getout:    
     return rest_token.size();    
 }
 
@@ -255,18 +229,18 @@ static struct command_map cmap[] = {
     { cmd_vncdisconnect, ":VNCDISCONNECT" },    
 };
 
-void branching(mainque_ptr main_que,               
-               deque<string>& token_list)    
+void branching(session_ptr &s)    
 {
-    int canonical;        
+    int canonical;
+    
     try {
     once:
         canonical = 0;	
         BOOST_FOREACH(struct command_map& e, cmap) {            
-            if (e.command == token_list[0]) {                
+            if (e.command == s->rest_token[0]) {                
                 canonical = 1;                
-                token_list.pop_front();                
-                if (e.function(main_que, token_list) > 0)                    
+                s->rest_token.pop_front();                
+                if (e.function(s) > 0)                    
                     goto once;                
                 break;                
             }            
@@ -277,18 +251,17 @@ void branching(mainque_ptr main_que,
     }
     
     if (!canonical) {
-        error("unrecognized command: %s", token_list[0].c_str());        
-        safe_clear(main_que);        
-    }    
+        error("unrecognized command: %s", s->rest_token[0].c_str());        
+        safe_clear((*s).main_que);        
+    }
     
-    token_list.clear();    
+    s->rest_token.clear();    
 }
 
 
 const int max_length = 1024 * 2;
-typedef shared_ptr<tcp::socket> socket_ptr;
-typedef shared_ptr<sparser> sparser_ptr;
 
+/*  
 void sendback_mesg(socket_ptr sock,                   
                    mainque_ptr& main_que)    
 {
@@ -304,57 +277,65 @@ void sendback_mesg(socket_ptr sock,
     }
     main_que->clear();    
 }
+*/
 
-void session(socket_ptr sock, mainque_ptr main_que)    
+void socksession(session_ptr& s)
 {    
     sparser_ptr sp = sparser_ptr(new sparser());    
-    string message_chunk;    
+    string message_chunk;
+    char  data[max_length];    
 
-    message_chunk.resize(max_length, ' ');    
-  
-    try {
-        while (1) {
-            char  data[max_length];	  
-            deque<string>  tokens;            
+    message_chunk.resize(max_length, ' ');
+    
+    try {        
+        while (s->sockconnected) {            
             boost::system::error_code  error;	  
-            size_t length = sock->read_some(asio::buffer(data), error);            
+            size_t length = s->sock->read_some(asio::buffer(data), error);            
 
             if (error == asio::error::eof) {		
                 break; // Connection closed cleanly by peer.                
             } else if (error) {		
                 throw boost::system::system_error(error); // Some other error.                
-            }            
-
+            }
+            
             if (data[length - 1] == '\n') {                
                 message_chunk.append(data, length); {                    
-                    sp->read_expression(message_chunk, tokens);                    
-                    branching(main_que, tokens);                    
+                    sp->read_expression(message_chunk, s->rest_token);                    
+                    branching(s);                    
                 }; message_chunk.erase();                
                 /* sending message  */                
-                sendback_mesg(sock, main_que);                
+                //                sendback_mesg(sock, main_que);                
             } else {                
                 message_chunk.append(data, length);                
                 continue;                
             }            
-        }
+        }        
     } catch (std::exception& e) {        
         cerr << "Exception in thread: " << e.what() << endl;        
+    }
+    s->sockconnected = false;    
+}
+
+void vncsession(session_ptr& s)    
+{
+    while (s->sockconnected) {        
+        s->DisplayLoop();        
     }    
 }
 
-void server(asio::io_service& io_service,            
-            short port, mainque_ptr main_que)    
-{
-    tcp::acceptor acc(io_service, tcp::endpoint(tcp::v4(), port));  
-    while (1) {	
-        socket_ptr sock(new tcp::socket(io_service));	
-        acc.accept(*sock);        
-        boost::thread t(boost::bind(session, sock, main_que));        
-    }  
+void server(asio::io_service& io_service, short port)    
+{    
+    tcp::acceptor acc(io_service, tcp::endpoint(tcp::v4(), port));
+    
+    while (1) {
+        session_ptr s = session_ptr(new session(io_service));        
+        acc.accept(*((*s).sock));        
+        boost::thread sock_thread(boost::bind(socksession, s));        
+        boost::thread vnc_thread(boost::bind(vncsession, s));        
+    }    
 }
 
-int start_server(int argc, char *argv[],
-                 mainque_ptr main_que)    
+int start_server(int argc, char *argv[])    
 {
     try {	
         if (argc != 2) {
@@ -362,7 +343,7 @@ int start_server(int argc, char *argv[],
             return 0;            
         }        
         boost::asio::io_service io_service;        	
-        server(io_service, std::atoi(argv[1]), main_que);        
+        server(io_service, std::atoi(argv[1]));        
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << "\n";
         return 0;        
@@ -411,23 +392,28 @@ void generator(mainque_ptr main_que)
     }    
 }
 
+#ifdef __DEBUG
 int start_generator(int argc, char *argv[],
                     mainque_ptr main_que)    
-{
-    boost::thread t(boost::bind(generator, main_que));
+{    
+    boost::thread t(boost::bind(generator, main_que));    
     return 1;    
 }
+#endif
 
-int main(int argc, char *argv[])  
+int main(int argc, char *argv[])
 {
-    mainque_ptr main_que(new deque<string>);    
 
+#ifdef __DEBUG    
+    /*      
     if (!start_generator(argc, argv, main_que)) {        
         error("Could not start generator");        
         exit(-1);        
     }
+    */
+#endif   
     
-    if (!start_server(argc, argv, main_que)) {
+    if (!start_server(argc, argv)) {        
         error("Could not start server");        
         exit(-1);        
     }
@@ -462,4 +448,41 @@ void test()
   ProgressDisp d("writing preprocessed output");
   png_write_view("lowpass.png", ccv);
   }  
+*/
+
+/*
+class server
+{
+private:
+    boost::asio::io_service& io_service_;
+    tcp::acceptor acceptor_;
+    boost::threadpool::pool tp;
+    
+public:
+    server(boost::asio::io_service& io_service, short port) : io_service_(io_service),
+          acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
+          tp(4)                                                              
+    {
+        shared_ptr<session> new_session(new session(io_service_));
+        acceptor_.async_accept(new_session->socket(),
+                               boost::bind(&server::handle_accept, this,
+                                           new_session,
+                                           boost::asio::placeholders::error));        
+    }
+
+    void handle_accept(shared_ptr<session> current_session, const
+                       boost::system::error_code& error)
+    {        
+        if (error)            
+            return;        
+
+        tp.schedule(boost::bind(&session::processRequest,current_session));        
+
+        shared_ptr<session> new_session(new session(io_service_));
+        acceptor_.async_accept(new_session->socket(),
+                               boost::bind(&server::handle_accept, this,
+                                           new_session,
+                                           boost::asio::placeholders::error));        
+    }
+};
 */

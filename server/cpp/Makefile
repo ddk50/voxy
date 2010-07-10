@@ -16,8 +16,8 @@ clean:
 	rm -f $(MSERVER)
 	rm -f *.png
 
-sexpr.o: include/sexpr.h
-mockserver.o: include/sexpr.h
+sexpr.o: include/sexpr.hpp
+mockserver.o: include/sexpr.hpp
 d3des.o: include/d3des.h
 global.o: include/global.hpp
 vncauth.o: include/global.hpp include/vncauth.h

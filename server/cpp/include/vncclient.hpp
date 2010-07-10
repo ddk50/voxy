@@ -80,7 +80,7 @@ public:
      */
   
 public:
-    VNCClient(char *server, int port, char *passFile);
+    VNCClient(const char *server, int port, const char *passFile);    
     ///< constructor
 
     char *serverCutText;
