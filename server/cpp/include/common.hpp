@@ -26,6 +26,7 @@
 #include <boost/math/common_factor.hpp>
 
 #include "vncclient.hpp"
+#include "ImgTile.hpp"
 #include "sexpr.hpp"
 
 using boost::asio::ip::tcp;
@@ -104,9 +105,14 @@ class session
 {
 public:
     mainque_ptr main_que;
-    deque<string> rest_token;    
     socket_ptr sock;
-    VNCClient_ptr vncclient;       
+    VNCClient_ptr vncclient;
+    MosaicMan_ptr mosaic;    
+    
+    deque<string> rest_token;
+
+    mutex thread_sync;    
+    
     bool vncconnected;
     bool incremental;
     bool sockconnected;    
@@ -120,11 +126,32 @@ public:
         incremental = false;
         sockconnected = true;        
     }
+    ~session() { VNCdisconnect(); }
 
-    ~session()        
-    {
-        VNCdisconnect();        
+    void safe_popfront(void)        
+    {        
+        mutex::scoped_lock lock(thread_sync);
+        main_que->pop_front();        
     }
+
+    void safe_clear(void)        
+    {
+        mutex::scoped_lock lock(thread_sync);    
+        main_que->clear();        
+    }    
+
+    void safe_pushback(string str)        
+    {        
+        mutex::scoped_lock lock(thread_sync);    
+        main_que->push_back(str);        
+    }    
+
+    void safe_pushback(const char *str)        
+    {
+        mutex::scoped_lock lock(thread_sync);
+        string t = str;    
+        main_que->push_back(t);        
+    }        
     
     void DisplayLoop(void)        
     {        
@@ -135,23 +162,25 @@ public:
                 notice("started VNC main loop");                
                 vncclient->sendFramebufferUpdateRequest(0, 0, vncclient->fbWidth, vncclient->fbHeight, 0);                
                 incremental = true;                
-            }        
+            }            
         
             if (vncclient->handleRFBServerMessage()) {                
                 switch(vncclient->srvmsg) {                    
                 case rfbFramebufferUpdate :                
-                    {                
+                    {                        
                         int x, y;
-                        int w, h;                
-                    
+                        int w, h;                        
                         x = vncclient->recv_rect.r.x;
-                        y = vncclient->recv_rect.r.y;
+                        y = vncclient->recv_rect.r.y;                        
                         w = vncclient->recv_rect.r.w - vncclient->recv_rect.r.x;
                         h = vncclient->recv_rect.r.h - vncclient->recv_rect.r.y;
-                    
-                        trace(DBG_VNC, " updated mosaic: x = %d, y = %d, w = %d, h = %d\n\n", x, y, w, h);
+                        
+                        mosaic->update_mosaic(x, y, w, h, vncclient->framebuffer, x, y);
+                        mosaic->export_mosaic();                        
+                        
+                        trace(DBG_VNC, " updated mosaic: x = %d, y = %d, w = %d, h = %d\n\n", x, y, w, h);                        
                     }                    
-                }
+                }                
             } else {
                 trace(DBG_VNC, " disconnect vnc\n");        
             }            
@@ -163,16 +192,22 @@ public:
         if (vncconnected)
             return false;
         
-        vncclient = VNCClient_ptr(new VNCClient((char*)host.c_str(), port, "./passfile"));
+        vncclient = VNCClient_ptr(new VNCClient(host.c_str(), port, "./passfile"));        
         vncconnected = vncclient->VNCInit();
-        incremental = false;        
+
+        if (vncconnected) {
+            mosaic = MosaicMan_ptr(new MosaicMan(vncclient->fbWidth, vncclient->fbHeight, 24));            
+            incremental = false;            
+        }               
         return vncconnected;        
     }
 
     void VNCdisconnect(void)
     {        
-        if (vncconnected)            
-            vncclient->VNCClose();                
+        if (vncconnected) {            
+            vncclient->VNCClose();
+            vncconnected = false;            
+        }        
     }
 };
 
