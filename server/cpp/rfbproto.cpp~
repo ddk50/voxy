@@ -82,7 +82,7 @@ bool VNCRFBproto::connectToRFBServer()
     return VNC_sock.SetNonBlocking();
 }
 
-bool VNCRFBproto::initialiseRFBConnection()    
+bool VNCRFBproto::initialiseRFBConnection()
 {
     rfbProtocolVersionMsg pv;
     rfbClientInitMsg ci;

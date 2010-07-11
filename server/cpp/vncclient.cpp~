@@ -460,7 +460,7 @@ bool VNCClient::handleRFBServerMessage()
   
     if (!framebuffer)
         return false;
-    if (!rfbproto.VNC_sock.ReadFromRFBServer((char *) &msg, 1))        
+    if (!rfbproto.VNC_sock.ReadFromRFBServer((char *) &msg, 1))
         return false;
 
     this->srvmsg = msg.type;
@@ -628,7 +628,7 @@ int VNCClient::getSock()
     return rfbproto.getSock();
 }
 
-bool VNCClient::sendIncrementalFramebufferUpdateRequest()   
+bool VNCClient::sendIncrementalFramebufferUpdateRequest()
 {
     return rfbproto.sendIncrementalFramebufferUpdateRequest();
 }

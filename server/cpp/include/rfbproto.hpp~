@@ -721,10 +721,10 @@ public:
 
 #if 0 //not used
     VNCRFBproto();
-    VNCRFBproto(const char *serveurname, int port);
-    VNCRFBproto(unsigned int IPAddr, int Port, const char *pswdfile);    
+    VNCRFBproto(char *serveurname, int port);
+    VNCRFBproto(unsigned int IPAddr, int Port, char *pswdfile);
 #endif
-    VNCRFBproto(const char *ServeurName, int Port, const char *pswdFile);
+    VNCRFBproto(char *ServeurName, int Port, char *pswdFile);
     ///< constructors
 
 #if 0 //not used
