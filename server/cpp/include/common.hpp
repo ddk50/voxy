@@ -101,13 +101,12 @@ typedef shared_ptr<VNCClient>               VNCClient_ptr;
 typedef shared_ptr<tcp::socket> socket_ptr;
 typedef shared_ptr<sparser> sparser_ptr;
 
-class session
+class session : public MosaicMan
 {
 public:
     mainque_ptr main_que;
     socket_ptr sock;
-    VNCClient_ptr vncclient;
-    MosaicMan_ptr mosaic;    
+    VNCClient_ptr vncclient;    
     
     deque<string> rest_token;
 
@@ -151,7 +150,7 @@ public:
         mutex::scoped_lock lock(thread_sync);
         string t = str;    
         main_que->push_back(t);        
-    }        
+    }    
     
     void DisplayLoop(void)        
     {        
@@ -166,7 +165,7 @@ public:
         
             if (vncclient->handleRFBServerMessage()) {                
                 switch(vncclient->srvmsg) {                    
-                case rfbFramebufferUpdate :                
+                case rfbFramebufferUpdate :                    
                     {                        
                         int x, y;
                         int w, h;                        
@@ -174,18 +173,37 @@ public:
                         y = vncclient->recv_rect.r.y;                        
                         w = vncclient->recv_rect.r.w - vncclient->recv_rect.r.x;
                         h = vncclient->recv_rect.r.h - vncclient->recv_rect.r.y;
-                        
-                        mosaic->update_mosaic(x, y, w, h, vncclient->framebuffer, x, y);
-                        mosaic->export_mosaic();                        
-                        
-                        trace(DBG_VNC, " updated mosaic: x = %d, y = %d, w = %d, h = %d\n\n", x, y, w, h);                        
+                        update_mosaic(x, y, w, h, vncclient->framebuffer, x, y);
+                        export_mosaic();                        
                     }                    
-                }                
-            } else {
-                trace(DBG_VNC, " disconnect vnc\n");        
+                }               
+            } else {                
+                trace(DBG_VNC, " disconnect vnc\n");                
             }            
         }        
     }
+
+    int export_mosaic(void)        
+    {
+        mutex::scoped_lock lock(thread_sync);
+        pImgTile tgt_tile;
+        string val;        
+        int	i = 0;        
+  
+        for (int y = 0 ; y < ytile_cnt ; ++y) {
+            for (int x = 0 ; x < xtile_cnt ; ++x) {
+                tgt_tile = tile[y][x];
+                tgt_tile->expose();                
+                val = boost::str(format("(:UPDATETILE \"%s\" %d %d %d %d)")                                 
+                                 % tgt_tile->get_filename()
+                                 % tgt_tile->xpos  % tgt_tile->ypos
+                                 % tgt_tile->width % tgt_tile->height);                
+                main_que->push_back(val);                
+                ++i;                
+            }        
+        }  
+        return i;        
+    }    
     
     bool VNCConnect(string host, int port, string password)        
     {        
@@ -193,10 +211,10 @@ public:
             return false;
         
         vncclient = VNCClient_ptr(new VNCClient(host.c_str(), port, "./passfile"));        
-        vncconnected = vncclient->VNCInit();
+        vncconnected = vncclient->VNCInit();        
 
         if (vncconnected) {
-            mosaic = MosaicMan_ptr(new MosaicMan(vncclient->fbWidth, vncclient->fbHeight, 24));            
+            alloctile(vncclient->fbWidth, vncclient->fbHeight, 24, 0);            
             incremental = false;            
         }               
         return vncconnected;        
