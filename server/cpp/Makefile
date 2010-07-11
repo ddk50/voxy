@@ -15,6 +15,9 @@ clean:
 	rm -f *.o
 	rm -f $(MSERVER)
 	rm -f *.png
+	rm -f *.cpp~
+	rm -f *.hpp~
+	rm -f *.h~
 
 ImgTile.o: include/vncclient.hpp
 genrand.o: include/genrand.hpp
