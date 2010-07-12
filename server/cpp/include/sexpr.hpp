@@ -82,7 +82,7 @@ public:
         char c = s[0];
         unsigned int n = 0;	
 	
-        for (; n < s.length() ; c = s.at(n)) {            
+        for (; n < s.length() ; c = s[n]) {            
             if (std::isspace(c)) {                
                 n++;		
                 continue;		
