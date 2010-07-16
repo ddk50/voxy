@@ -25,6 +25,8 @@
 #include <boost/random.hpp>
 #include <boost/math/common_factor.hpp>
 
+#include <X11/Xlib.h>
+
 #include "vncclient.hpp"
 #include "ImgTile.hpp"
 #include "sexpr.hpp"
@@ -159,7 +161,7 @@ public:
                 vncclient->sendIncrementalFramebufferUpdateRequest();                
             } else {
                 notice("started VNC main loop");                
-                vncclient->sendFramebufferUpdateRequest(0, 0, vncclient->fbWidth, vncclient->fbHeight, 0);                
+                vncclient->sendFramebufferUpdateRequest(0, 0, vncclient->fbWidth, vncclient->fbHeight, false);                
                 incremental = true;                
             }            
         
@@ -195,7 +197,7 @@ public:
                 tgt_tile = tile[y][x];
                 tgt_tile->expose();                
                 val = boost::str(format("(:UPDATETILE \"%s\" %d %d %d %d)")                                 
-                                 % tgt_tile->get_filename()
+                                 % tgt_tile->get_onlyfname()
                                  % tgt_tile->xpos  % tgt_tile->ypos
                                  % tgt_tile->width % tgt_tile->height);                
                 main_que->push_back(val);                
@@ -203,7 +205,17 @@ public:
             }        
         }  
         return i;        
-    }    
+    }
+
+    void SendKey(int key, int flag)        
+    {
+        KeySym ks = key;
+        
+        if (!vncconnected)
+            return;        
+        
+        vncclient->rfbproto.sendKeyEvent(ks, flag);        
+    }
     
     bool VNCConnect(string host, int port, string password)        
     {        
@@ -214,14 +226,14 @@ public:
         vncconnected = vncclient->VNCInit();        
 
         if (vncconnected) {
-            alloctile(vncclient->fbWidth, vncclient->fbHeight, 24, 0);            
+            alloctile(vncclient->fbWidth, vncclient->fbHeight, 24, 0);
             incremental = false;            
         }               
         return vncconnected;        
     }
 
     void VNCdisconnect(void)
-    {        
+    {
         if (vncconnected) {            
             vncclient->VNCClose();
             vncconnected = false;

@@ -61,7 +61,7 @@ int cmd_chngresol(session_ptr &s)
         rest_token.pop_front();
         rest_token.pop_front();        
     } else {
-        throw "too few argument for chngresol\n";        
+        notice("too few argument for chngresol\n");        
     }
   
     return rest_token.size();    
@@ -71,29 +71,39 @@ int cmd_mouseevent(session_ptr &s)
 {
     deque<string>& rest_token = s->rest_token;    
     
-    if (rest_token.size() >= 2) {	
+    if (rest_token.size() >= 3) {        
         int x = lexical_cast<int>(rest_token[0]);
         int y = lexical_cast<int>(rest_token[1]);
+        int btnst = lexical_cast<int>(rest_token[2]);        
 	
-        logging(boost::str(format("MOUSEEVENT (x, y) = (%d, %d)") % x % y));        
+        logging(boost::str(format("MOUSEEVENT (x, y, state) = (%d, %d, %d)") % x % y % btnst));        
 
+        rest_token.pop_front();
         rest_token.pop_front();
         rest_token.pop_front();        
 	
         return rest_token.size();        
     } else {
-        throw "too few argument for chngresol\n";        
+        notice("too few argument for mouseevent\n");        
     }
+
+    return rest_token.size();    
 }
 
 int cmd_keyevent(session_ptr &s)    
 {
-    deque<string>& rest_token = s->rest_token;    
+    deque<string>& rest_token = s->rest_token;
+    int key;    
+
+    if (rest_token.size() >= 1) {
+        key = lexical_cast<int>(rest_token[0]);        
+        logging(boost::str(format("KEYVALUES values: %d") % key));
+        s->SendKey(key, 1);        
+        rest_token.pop_front();        
+    } else {
+        notice("too few argument for keyevent\n");        
+    }
     
-    logging(boost::str(format("KEYVALUES values: %s") % rest_token[0]));    
-    
-    rest_token.pop_front();
-    trace(DBG_INIT, "test %d\n", rest_token.size());    
     return rest_token.size();    
 }
 
@@ -107,28 +117,33 @@ int cmd_vncconnect(session_ptr &s)
     char *ctx;    
     char *host_ptr, *port_ptr;
 
-    std::strcpy(buffer, hoststr.c_str());
+    if (rest_token.size() >= 2) {        
+        std::strcpy(buffer, hoststr.c_str());        
 
-    host_ptr = strtok_r(buffer, delim, &ctx);    
-    port_ptr = strtok_r(NULL, delim, &ctx);    
+        host_ptr = strtok_r(buffer, delim, &ctx);    
+        port_ptr = strtok_r(NULL, delim, &ctx);
 
-    string host(host_ptr);    
-    int port = lexical_cast<int>(port_ptr);
+        assert(host_ptr != NULL);
+        assert(port_ptr != NULL);        
 
-    logging("VNCCONNECT ... ");    
+        string host(host_ptr);    
+        int port = lexical_cast<int>(port_ptr);
 
-    if (s->VNCConnect(host, port, password)) {
-        /* connect vnc */
-        logging(boost::str(format("  establish VNCCONNECT (host: %s, port: %d, password: %s)")
-                           % host % port % password));        
+        logging("VNCCONNECT ... ");        
+
+        if (s->VNCConnect(host, port, password)) {
+            /* connect vnc */
+            logging(boost::str(format("  establish VNCCONNECT (host: %s, port: %d, password: %s)")
+                               % host % port % password));        
+        } else {
+            logging(boost::str(format("  Could not establish VNCCOONECT (host: %s, port: %d, password: %s)")
+                               % host % port % password));        
+        }        
+        rest_token.pop_front();        
+        rest_token.pop_front();        
     } else {
-        logging(boost::str(format("  Could not establish VNCCOONECT (host: %s, port: %d, password: %s)")
-                           % host % port % password));        
+        notice("too few argument for vncconnect");        
     }    
-
-    rest_token.pop_front();    
-    rest_token.pop_front();    
-
     return rest_token.size();    
 }
 
@@ -238,7 +253,7 @@ void socksession(session_ptr& s)
                 throw boost::system::system_error(error); // Some other error.                
             }
             
-            if (data[length - 1] == '\n') {
+            if (data[length - 1] == '\n') {                
                 message_chunk.append(data, length); {                    
                     sp->read_expression(message_chunk, s->rest_token);                    
                     branching(s);                    
@@ -253,7 +268,8 @@ void socksession(session_ptr& s)
     } catch (std::exception& e) {
         cerr << "Exception in thread: " << e.what() << endl;        
     }
-    s->sockconnected = false;    
+    s->sockconnected = false;
+    s->VNCdisconnect();    
 }
 
 void vncsession(session_ptr& s)    

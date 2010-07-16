@@ -15,17 +15,20 @@ private:
     char filename[MAX_NAME];
     FILE *fp;    
   
-    char shadow_fname[MAX_NAME];    
+    char shadow_fname[MAX_NAME];
+    char shadow_fnameonly[MAX_NAME];    
   
     unsigned char **imgbuf;
     int	bits_per_pixel;
   
     void write_png(FILE *out);
-    void gen_filename(char *out);    
+    void gen_filename(char *out);
     void gen_id(void);    
     void openfile(char *fname, FILE **out);
 
     void swap(void);
+
+    void init_shadowfname(void);    
   
 public:
     int	dirty;
@@ -47,7 +50,8 @@ public:
                      int root_w, int root_h);
 
   
-    char *get_filename(void);
+    char *get_filename(void); /* it feeds back full path */
+    char *get_onlyfname(void);    
   
     ImgTile(int x, int y, int width, int height, int bits_per_pixel);
     ~ImgTile();

@@ -13,6 +13,8 @@
 #include "genrand.hpp"
 #include "global.hpp"
 
+#define PNGFILE_PATH "/home/ddk/programs/voxy/client/pics"
+
 using namespace boost;
 using namespace std;
 
@@ -44,8 +46,9 @@ ImgTile::ImgTile(int x, int y, int width, int height, int bits_per_pixel)
   
     std::cout << tmp << "\n";
 
-    fp = NULL;    
-    gen_filename(shadow_fname);    
+    fp = NULL;
+    
+    init_shadowfname();    
 }
 
 ImgTile::~ImgTile()
@@ -209,12 +212,21 @@ void ImgTile::write_png(FILE *out)
     return;
 }
 
+void ImgTile::init_shadowfname(void)    
+{
+    GenRand *rand = GenRand::instance();    
+    int val = rand->gennum();    
+  
+    snprintf(shadow_fname, MAX_NAME - 1, "%s/%d.png", PNGFILE_PATH, val);
+    snprintf(shadow_fnameonly, MAX_NAME - 1, "%d.png", val);    
+}
+
 void ImgTile::gen_filename(char *out)
 {  
     GenRand *rand = GenRand::instance();
     int val = rand->gennum();    
   
-    snprintf(out, MAX_NAME - 1, "pngtest/%d.png", val);    
+    snprintf(out, MAX_NAME - 1, "%s/%d.png", PNGFILE_PATH, val);    
 }
 
 void ImgTile::gen_id(void)    
@@ -226,6 +238,11 @@ void ImgTile::gen_id(void)
 char *ImgTile::get_filename(void)
 {    
     return shadow_fname;    
+}
+
+char *ImgTile::get_onlyfname(void)
+{
+    return shadow_fnameonly;    
 }
 
 MosaicMan::MosaicMan(int canvas_width, int canvas_height,
@@ -346,7 +363,7 @@ int MosaicMan::update_mosaic(int x, int y, int width, int height,
 
     int	draw_x, draw_y;  
     int	d_w, d_h;
-  
+    
     if (((x + width) > this->canvas_width) ||
         ((y + height) > this->canvas_height)) {
         return 0;

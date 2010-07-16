@@ -19,6 +19,7 @@ clean:
 	rm -f *.hpp~
 	rm -f *.h~
 
+##rdp.o: include/rdp.hpp
 ImgTile.o: include/vncclient.hpp
 genrand.o: include/genrand.hpp
 sexpr.o: include/sexpr.hpp
