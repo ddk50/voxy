@@ -2,6 +2,7 @@
 require 'rubygems'
 require 'sinatra'
 require 'json'
+require 'pp'
 
 pubdir = "@DATADIR@/voxy/pub_www"
 if pubdir =~ /@/
@@ -17,7 +18,7 @@ $picture_path = "/pics/"
 
 $max_recvlen = 64*1024;
 
-helpers do
+# helpers do
 
 	class VoxySession
 		def initialize(sock, id)
@@ -39,6 +40,7 @@ helpers do
 			end
 			# 最後の一つは中途半端なS式か空白文字になる
 			@recv_buf = sexpr_list.pop
+			pp sexpr_list
 			sexpr_list.map do |i|
 				sexpr = i[2..-1].lstrip.split(" ")
 				sexpr.map! do |s|
@@ -70,7 +72,7 @@ helpers do
 		end
 	end
 	
-end
+# end
 
 # トップページからのリダイレクト
 get '/' do
@@ -147,7 +149,9 @@ get '/login' do
 		$sessions[session_id] = new_session	
 	end
 
-	new_session.Send("(:VNCCONNECT %s %s)" % [hostname, password])
+	# new_session.Send("(:VNCCONNECT \"%s\" \"%s\")" % [hostname, password])
+	# new_session.Send('(:VNCCONNECT "157.82.3.89:5900" "test")')
+    new_session.Send('(:VNCCONNECT "127.0.0.1:5900" "test")')
 	{
 		:stat => "ok",
 		:session_id => session_id,

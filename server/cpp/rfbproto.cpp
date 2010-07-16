@@ -60,7 +60,7 @@ bool newServerCutText = false;
 
 
 /** Constructors start here */
-VNCRFBproto::VNCRFBproto(char *Servername, int Port, char* pswdFile)
+VNCRFBproto::VNCRFBproto(const char *Servername, int Port, const char* pswdFile)    
     : VNC_sock(Servername, Port)
 {
     ShareDesktop = true;
@@ -82,7 +82,7 @@ bool VNCRFBproto::connectToRFBServer()
     return VNC_sock.SetNonBlocking();
 }
 
-bool VNCRFBproto::initialiseRFBConnection()
+bool VNCRFBproto::initialiseRFBConnection()    
 {
     rfbProtocolVersionMsg pv;
     rfbClientInitMsg ci;

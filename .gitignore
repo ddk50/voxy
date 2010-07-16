@@ -1,0 +1,7 @@
+*.cpp~
+*.h~
+*.png
+*.hpp~
+*.o
+Makefile~
+

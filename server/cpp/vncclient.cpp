@@ -58,7 +58,7 @@ VNCRGB::VNCRGB(uint8_t r, uint8_t g, uint8_t b)
 }
 
 // start
-VNCClient::VNCClient(char *server, int port, char *pswdfile)
+VNCClient::VNCClient(const char *server, int port, const char *pswdfile)    
     : rfbproto(server, port, pswdfile)
 {
     fbWidth = 0;
@@ -460,7 +460,7 @@ bool VNCClient::handleRFBServerMessage()
   
     if (!framebuffer)
         return false;
-    if (!rfbproto.VNC_sock.ReadFromRFBServer((char *) &msg, 1))
+    if (!rfbproto.VNC_sock.ReadFromRFBServer((char *) &msg, 1))        
         return false;
 
     this->srvmsg = msg.type;
@@ -603,7 +603,7 @@ bool VNCClient::handleRFBServerMessage()
     case rfbServerCutText:
         if (!rfbproto.VNC_sock.ReadFromRFBServer(((char *) &msg) + 1, sz_rfbServerCutTextMsg - 1))
             return false;
-
+        
         msg.sct.length = swap32IfLE(msg.sct.length);
 
         if (serverCutText) delete[] serverCutText; serverCutText = NULL;
@@ -628,7 +628,7 @@ int VNCClient::getSock()
     return rfbproto.getSock();
 }
 
-bool VNCClient::sendIncrementalFramebufferUpdateRequest()
+bool VNCClient::sendIncrementalFramebufferUpdateRequest()   
 {
     return rfbproto.sendIncrementalFramebufferUpdateRequest();
 }
