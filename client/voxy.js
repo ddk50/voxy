@@ -58,7 +58,7 @@ VoXYPanel.prototype = {
 			"<div class='voxy_login_form'><form>"
 			+"User: <input type='text' class='login_hostname' size='32' /><br />"
 			+"Pass: <input type='password' class='login_password' size='32' /><br />"
-			+"<input type='button' class='login_btn' value='Login' onclick='VoXYLogin(this.form);' />"
+			+"<input type='submit' class='login_btn' value='Login' onclick='VoXYLogin(this.form); return false;' />"
 			+"</form></div>"
 			);
 		
@@ -67,6 +67,8 @@ VoXYPanel.prototype = {
 	// ログインする
 	Login: function(hostname, password)
 	{
+	WriteLog("Do login");
+
 		$.ajax({
 			data: {
 				hostname: hostname,
