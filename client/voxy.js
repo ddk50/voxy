@@ -1,6 +1,7 @@
 
 // imgタグ用のシリアル番号
 var MsgSerial = 0;
+var listen_interval = 50;
 
 
 // VoXYPanelクラス
@@ -116,7 +117,7 @@ VoXYPanel.prototype = {
 	{
 		(function(obj, timeout_val){
 			window.setTimeout(function(){obj.Listen();}, timeout_val);
-		})(this, 1000);
+		})(this, listen_interval);
 	},
 
 	// Listenコマンドをサーバーへ送信する
