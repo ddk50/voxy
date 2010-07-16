@@ -76,7 +76,9 @@ int cmd_mouseevent(session_ptr &s)
         int y = lexical_cast<int>(rest_token[1]);
         int btnst = lexical_cast<int>(rest_token[2]);        
 	
-        logging(boost::str(format("MOUSEEVENT (x, y, state) = (%d, %d, %d)") % x % y % btnst));        
+        logging(boost::str(format("MOUSEEVENT (x, y, state) = (%d, %d, %d)") % x % y % btnst));
+
+        s->MouseEvent(x, y, btnst);        
 
         rest_token.pop_front();
         rest_token.pop_front();

@@ -23,7 +23,7 @@
 #include "rfbproto.hpp"
 #include "png.h"
 
-#define RFB_BUF_SIZE	(1024*768 * sizeof(uint32_t))
+//#define RFB_BUF_SIZE	(1024*768 * sizeof(uint32_t))
 
 /**
  * class VNCRGB
@@ -54,7 +54,8 @@ public:
 class VNCClient {
 
 private:
-    char rfbbuffer[RFB_BUF_SIZE];
+    //    char rfbbuffer[RFB_BUF_SIZE];    
+    char *rfbbuffer;    
     ///< this buffer is used to get Server MSGs
 
     bool viewonly;

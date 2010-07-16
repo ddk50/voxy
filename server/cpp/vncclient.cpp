@@ -88,15 +88,22 @@ bool VNCClient::VNCInit()
             VNCClose();
             return false;
         }
-
+        
         fbWidth = rfbproto.si.framebufferWidth;
         fbHeight = rfbproto.si.framebufferHeight;
-        framebuffer = new VNCRGB[fbWidth * fbHeight];
+        framebuffer = new VNCRGB[fbWidth * fbHeight];        
         if (!framebuffer) {
             error("VNCInit: unable to allocate memory for framebuffer");
             VNCClose();
             return false;
-        }
+        }        
+
+        rfbbuffer = new char[sizeof(uint32_t) * fbWidth * fbHeight];        
+        if (!rfbbuffer) {            
+            error("VNCInit: unable to allocate memory for framebuffer");
+            VNCClose();
+            return false;            
+        }        
 	
         return true;
     }
@@ -152,7 +159,8 @@ bool VNCClient::VNCClose()
 {
     close(getSock());
     if (framebuffer) delete[] framebuffer; framebuffer = NULL;
-    return true;
+    if (rfbbuffer) delete[] rfbbuffer; rfbbuffer = NULL;    
+    return true;    
 }
 
 /*

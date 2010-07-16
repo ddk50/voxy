@@ -216,6 +216,14 @@ public:
         
         vncclient->rfbproto.sendKeyEvent(ks, flag);        
     }
+
+    void MouseEvent(int x, int y, int btnmask)        
+    {
+        if (!vncconnected)            
+            return;
+        
+        vncclient->rfbproto.sendPointerEvent(x, y, btnmask);        
+    }    
     
     bool VNCConnect(string host, int port, string password)        
     {        
