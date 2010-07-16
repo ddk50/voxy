@@ -23,7 +23,7 @@
 #include "rfbproto.hpp"
 #include "png.h"
 
-//#define RFB_BUF_SIZE	(1024*768 * sizeof(uint32_t))
+#define RFB_BUF_SIZE	(1600*1200 * sizeof(uint32_t))
 
 /**
  * class VNCRGB

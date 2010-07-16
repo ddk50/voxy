@@ -9,3 +9,6 @@ dist_voxycli_DATA = \
 	voxyview.css \
 	voxyview.html \
 	voxyview.js
+
+install-data-local:
+	mkdir -p $(datadir)/voxy/pub_www/pics

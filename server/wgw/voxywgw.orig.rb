@@ -149,9 +149,9 @@ get '/login' do
 		$sessions[session_id] = new_session	
 	end
 
-	# new_session.Send("(:VNCCONNECT \"%s\" \"%s\")" % [hostname, password])
+	new_session.Send("(:VNCCONNECT \"%s\" \"%s\")" % [hostname, password])
 	# new_session.Send('(:VNCCONNECT "157.82.3.89:5900" "test")')
-    new_session.Send('(:VNCCONNECT "127.0.0.1:5900" "test")')
+  #  new_session.Send('(:VNCCONNECT "127.0.0.1:5900" "test")')
 	{
 		:stat => "ok",
 		:session_id => session_id,

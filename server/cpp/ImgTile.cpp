@@ -12,8 +12,9 @@
 #include "ImgTile.hpp"
 #include "genrand.hpp"
 #include "global.hpp"
+#include "config.h"
 
-#define PNGFILE_PATH "/home/ddk/programs/voxy/client/pics"
+#define PNGFILE_PATH DATADIR "/voxy/pub_www/pics"
 
 using namespace boost;
 using namespace std;
