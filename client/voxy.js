@@ -1,4 +1,8 @@
 
+// imgタグ用のシリアル番号
+var MsgSerial = 0;
+
+
 // VoXYPanelクラス
 // jqelem: VoXYにするdiv jqueryエレメント
 // name: パネル名
@@ -240,7 +244,8 @@ VoXYPanel.prototype = {
 					if(this.viewbody.height() < parseInt(msg[3]) + parseInt(msg[5]))
 						this.viewbody.height(parseInt(msg[3]) + parseInt(msg[5]));
 				}
-				imgtag.attr('src', msg[1]);
+				imgtag.attr('src', msg[1] + '?' + MsgSerial);
+				MsgSerial += 1;
 			}
 			// 解像度の変更
 			else if(smsg[i][0] == 'CHNGRESOL')
