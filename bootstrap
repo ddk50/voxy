@@ -31,14 +31,14 @@ if test x"$1" = x"--help"; then
 fi
 
 
-ACLOCAL="aclocal -I./vendor/ax_boost"
+ACLOCAL="aclocal -I./vendor/ax_boost -I./vendor"
 ACLOCAL_FILES="aclocal.m4"
 ALWAYS_CLEAN="config.status config.log config.cache libtool"
 AUTOCONF="autoconf"
 AUTOCONF_FILES="configure"
 AUTOHEADER="autoheader"
 AUTOHEADER_FILES=""
-AUTOMAKE="automake --add-missing"
+AUTOMAKE="automake --add-missing --foreign"
 AUTOMAKE_FILES="config.sub stamp-h.in ltmain.sh missing mkinstalldirs install-sh config.guess"
 CONFIG_AUX_DIR="."
 CONFIG_FILES="stamp-h ltconfig"

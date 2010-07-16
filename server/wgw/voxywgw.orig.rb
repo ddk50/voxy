@@ -1,8 +1,13 @@
+#!/usr/bin/env ruby
 require 'rubygems'
 require 'sinatra'
 require 'json'
 
-set :public, "../../client"
+pubdir = "@DATADIR@/voxy/pub_www"
+if pubdir =~ /@/
+  pubdir = '../../client'
+end
+set :public, pubdir
 
 # セッション
 $sessions = []
