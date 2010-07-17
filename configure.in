@@ -27,14 +27,14 @@ else
 fi
 
 AC_MSG_CHECKING([json])
-if ruby -rrubygems -rjson -e 'exit 0'; then
+if ruby -rrubygems -e "require 'json'; exit 0"; then
 	AC_MSG_RESULT([ok])
 else
 	AC_MSG_FAILURE([not found])
 fi
 
 AC_MSG_CHECKING([sinatra])
-if ruby -rrubygems -rsinatra -e 'exit 0'; then
+if ruby -rrubygems -e "require 'json'; exit 0"; then
 	AC_MSG_RESULT([ok])
 else
 	AC_MSG_FAILURE([not found])
