@@ -21,12 +21,11 @@ AX_BOOST_THREAD
 AX_BOOST_DATE_TIME
 AX_BOOST_SYSTEM
 
-AC_CHECK_LIB(stdc++,main)
-AC_CHECK_LIB(pthread,main)
-AC_CHECK_LIB(png,main)
-AC_CHECK_LIB(jpeg,main)
-AC_CHECK_LIB(X11,main)
-
+AC_CHECK_LIB(stdc++,main, [], [AC_MSG_FAILURE([could not find stdc++])])
+AC_CHECK_LIB(pthread,main, [], [AC_MSG_FAILURE([could not find pthread])])
+AC_CHECK_LIB(png,main, [], [AC_MSG_FAILURE([could not find libpng])])
+AC_CHECK_LIB(jpeg,main, [], [AC_MSG_FAILURE([could not find libjpeg])])
+AC_CHECK_LIB(X11,main, [], [AC_MSG_FAILURE([could not find libX11])])
 
 # Checks for header files.
 AC_HEADER_STDC
