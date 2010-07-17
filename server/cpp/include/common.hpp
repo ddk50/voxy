@@ -161,7 +161,8 @@ public:
                 vncclient->sendIncrementalFramebufferUpdateRequest();                
             } else {
                 notice("started VNC main loop");                
-                vncclient->sendFramebufferUpdateRequest(0, 0, vncclient->fbWidth, vncclient->fbHeight, false);                
+                vncclient->sendFramebufferUpdateRequest(0, 0, vncclient->fbWidth,
+                                                        vncclient->fbHeight, false);                
                 incremental = true;                
             }            
         
@@ -212,16 +213,14 @@ public:
         KeySym ks = key;
         
         if (!vncconnected)
-            return;        
-        
+            return;                
         vncclient->rfbproto.sendKeyEvent(ks, flag);        
     }
 
     void MouseEvent(int x, int y, int btnmask)        
     {
         if (!vncconnected)            
-            return;
-        
+            return;        
         vncclient->rfbproto.sendPointerEvent(x, y, btnmask);        
     }    
     
