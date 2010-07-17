@@ -61,14 +61,16 @@ VoXYPanel.prototype = {
 			+"<input type='submit' class='login_btn' value='Login' onclick='VoXYLogin(this.form); return false;' />"
 			+"</form></div>"
 			);
-		
+
+		// 切断ボタンの無効化
+		this.toolbar.children(".voxy_toolbar_disconnect").attr(
+			'disabled', 'disabled'
+		);
 	},
 	
 	// ログインする
 	Login: function(hostname, password)
 	{
-	WriteLog("Do login");
-
 		$.ajax({
 			data: {
 				hostname: hostname,
@@ -79,6 +81,12 @@ VoXYPanel.prototype = {
 			context: this,
 			success: this.LoginSuccess
 		});
+
+		// 切断ボタンの有効化
+		this.toolbar.children(".voxy_toolbar_disconnect").removeAttr(
+			'disabled'
+		);
+
 	},
 
 	
@@ -199,6 +207,9 @@ VoXYPanel.prototype = {
 		this.mouse_y = event.pageY - this.viewbody[0].offsetTop;
 		this.mouse_moved = true;
 	},
+	// 1 L button
+	// 2 middle button
+	// 3 R button
 	OnMouseDown: function(event)
 	{
 		this.SendMouseEvent(event.which, 1);
@@ -233,7 +244,7 @@ VoXYPanel.prototype = {
 					// 場所にマッチするimgタグが無かった場合
 					// 新しく追加
 					var offset = this.viewbody.offset();
-					this.viewbody.append("<img id='"+tag_id+"' alt='screen' />")
+					this.viewbody.append("<img class='viewer' id='"+tag_id+"' alt='screen' />")
 					imgtag = $('#'+tag_id);
 					imgtag.css('position', 'absolute');
 					imgtag.css('left', offset.left + parseInt(msg[2]));
