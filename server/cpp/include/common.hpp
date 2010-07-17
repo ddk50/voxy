@@ -129,30 +129,30 @@ public:
     }
     ~session() { VNCdisconnect(); }
 
-    void safe_popfront(void)        
-    {        
-        mutex::scoped_lock lock(thread_sync);
-        main_que->pop_front();        
-    }
+//     void safe_popfront(void)        
+//     {        
+//         mutex::scoped_lock lock(thread_sync);
+//         main_que->pop_front();        
+//     }
 
-    void safe_clear(void)        
-    {
-        mutex::scoped_lock lock(thread_sync);    
-        main_que->clear();        
-    }    
+//     void safe_clear(void)        
+//     {
+//         mutex::scoped_lock lock(thread_sync);    
+//         main_que->clear();        
+//     }    
 
-    void safe_pushback(string str)        
-    {        
-        mutex::scoped_lock lock(thread_sync);    
-        main_que->push_back(str);        
-    }    
+//     void safe_pushback(string str)        
+//     {        
+//         mutex::scoped_lock lock(thread_sync);    
+//         main_que->push_back(str);        
+//     }    
 
-    void safe_pushback(const char *str)        
-    {
-        mutex::scoped_lock lock(thread_sync);
-        string t = str;    
-        main_que->push_back(t);        
-    }    
+//     void safe_pushback(const char *str)        
+//     {
+//         mutex::scoped_lock lock(thread_sync);
+//         string t = str;    
+//         main_que->push_back(t);        
+//     }    
     
     void DisplayLoop(void)        
     {        
@@ -231,9 +231,13 @@ public:
     {        
         if (vncconnected)
             return false;
-        
-        vncclient = VNCClient_ptr(new VNCClient(host.c_str(), port, "./passfile"));        
-        vncconnected = vncclient->VNCInit();        
+
+        try {            
+            vncclient = VNCClient_ptr(new VNCClient(host.c_str(), port, "./passfile"));        
+            vncconnected = vncclient->VNCInit();            
+        } catch (std::exception& e) {
+            cout << "VNCConnect: " << e.what() << endl;            
+        }
 
         if (vncconnected) {
             alloctile(vncclient->fbWidth, vncclient->fbHeight, 24, 0);
@@ -244,10 +248,11 @@ public:
 
     void VNCdisconnect(void)
     {
+        mutex::scoped_lock lock(thread_sync);        
         if (vncconnected) {            
             vncclient->VNCClose();
-            safe_clear();			
-            vncconnected = false;			
+            vncconnected = false;
+            main_que->clear();            
         }        
     }
 

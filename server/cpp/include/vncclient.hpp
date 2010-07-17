@@ -23,8 +23,6 @@
 #include "rfbproto.hpp"
 #include "png.h"
 
-#define RFB_BUF_SIZE	(1600*1200 * sizeof(uint32_t))
-
 /**
  * class VNCRGB
  * this is what our framebuffer is made of 24 bits per pixel
@@ -54,8 +52,9 @@ public:
 class VNCClient {
 
 private:
-    //    char rfbbuffer[RFB_BUF_SIZE];    
-    char *rfbbuffer;    
+    char *rfbbuffer;
+    //    char rfbbuffer[1600 * 1200 * sizeof(uint32_t)];    
+    int rfbbuffer_size;    
     ///< this buffer is used to get Server MSGs
 
     bool viewonly;

@@ -67,7 +67,8 @@ VNCClient::VNCClient(const char *server, int port, const char *pswdfile)
     viewonly = false;
     serverCutText = NULL;
     newServerCutText = false;
-	rfbbuffer = NULL;	
+    //    rfbbuffer = NULL;
+    //    rfbbuffer_size = 0;    
 }
 
 VNCClientTextured::VNCClientTextured(char *server, int port, char *pswdfile)
@@ -78,7 +79,7 @@ VNCClientTextured::VNCClientTextured(char *server, int port, char *pswdfile)
 }
 
 bool VNCClient::VNCInit()
-{
+{    
     if (rfbproto.connectToRFBServer() && rfbproto.initialiseRFBConnection()) {
 
         rfbproto.setVisual32();
@@ -87,7 +88,7 @@ bool VNCClient::VNCInit()
             error("VNCInit: unable to set default PixelFormat");
             VNCClose();
             return false;
-        }
+        }        
         
         fbWidth = rfbproto.si.framebufferWidth;
         fbHeight = rfbproto.si.framebufferHeight;
@@ -96,15 +97,16 @@ bool VNCClient::VNCInit()
             error("VNCInit: unable to allocate memory for framebuffer");
             VNCClose();
             return false;
-        }        
-
+        }
+        
         rfbbuffer = new char[sizeof(uint32_t) * fbWidth * fbHeight];        
+        rfbbuffer_size = sizeof(uint32_t) * fbWidth * fbHeight;        
         if (!rfbbuffer) {            
             error("VNCInit: unable to allocate memory for framebuffer");
             VNCClose();
             return false;            
         }        
-	
+        
         return true;
     }
     else {
@@ -159,7 +161,7 @@ bool VNCClient::VNCClose()
 {
     close(getSock());
     if (framebuffer) delete[] framebuffer; framebuffer = NULL;
-    if (rfbbuffer) delete[] rfbbuffer; rfbbuffer = NULL;    
+    if (rfbbuffer) delete[] rfbbuffer; rfbbuffer = NULL; rfbbuffer_size = 0;    
     return true;    
 }
 
@@ -547,7 +549,8 @@ bool VNCClient::handleRFBServerMessage()
 
                 case rfbEncodingRaw:
                     bytesPerLine = rect.r.w * rfbproto.pixFormat.bitsPerPixel / 8;
-                    linesToRead = sizeof(rfbbuffer) / bytesPerLine;
+                    //                    linesToRead = sizeof(rfbbuffer) / bytesPerLine;                    
+                    linesToRead = rfbbuffer_size / bytesPerLine;                    
 
                     //trace(DBG_VNC, "handleRFBServerMessage: rfbFramebufferUpdate rfbEncodingRaw bytesPerLine=%d linesToRead=%d",
                     //		bytesPerLine, linesToRead);
