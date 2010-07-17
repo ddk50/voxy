@@ -14,6 +14,31 @@ fi
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_LIBTOOL
+AC_CHECK_PROG([RUBY], [ruby], [yes],,,)
+if test "x${RUBY}" != "xyes"; then
+	AC_MSG_FAILURE([ruby not installed])
+fi
+
+AC_MSG_CHECKING([rubygems])
+if ruby -rrubygems -e 'exit 0'; then
+	AC_MSG_RESULT([ok])
+else
+	AC_MSG_FAILURE([not found])
+fi
+
+AC_MSG_CHECKING([json])
+if ruby -rrubygems -rjson -e 'exit 0'; then
+	AC_MSG_RESULT([ok])
+else
+	AC_MSG_FAILURE([not found])
+fi
+
+AC_MSG_CHECKING([sinatra])
+if ruby -rrubygems -rsinatra -e 'exit 0'; then
+	AC_MSG_RESULT([ok])
+else
+	AC_MSG_FAILURE([not found])
+fi
 
 # Checks for libraries.
 AX_BOOST_BASE(1.38)
