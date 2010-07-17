@@ -67,7 +67,7 @@ VNCClient::VNCClient(const char *server, int port, const char *pswdfile)
     viewonly = false;
     serverCutText = NULL;
     newServerCutText = false;
-  
+	rfbbuffer = NULL;	
 }
 
 VNCClientTextured::VNCClientTextured(char *server, int port, char *pswdfile)

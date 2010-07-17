@@ -243,8 +243,8 @@ public:
     {
         if (vncconnected) {            
             vncclient->VNCClose();
-            vncconnected = false;
-            safe_clear();            
+            safe_clear();			
+            vncconnected = false;			
         }        
     }
 };
