@@ -78,7 +78,7 @@ int cmd_mouseevent(session_ptr &s)
 	
         logging(boost::str(format("MOUSEEVENT (x, y, state) = (%d, %d, %d)") % x % y % btnst));
 
-        s->MouseEvent(x, y, btnst);        
+        s->MouseEvent(x, y, 1);       
 
         rest_token.pop_front();
         rest_token.pop_front();
