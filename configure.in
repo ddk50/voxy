@@ -34,7 +34,7 @@ else
 fi
 
 AC_MSG_CHECKING([sinatra])
-if ruby -rrubygems -e "require 'json'; exit 0"; then
+if ruby -rrubygems -e "require 'sinatra'; exit 0"; then
 	AC_MSG_RESULT([ok])
 else
 	AC_MSG_FAILURE([not found])
