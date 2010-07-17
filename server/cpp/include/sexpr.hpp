@@ -75,33 +75,29 @@ public:
     //  
     // This function does  not parse nested s-expression well.  
     //  
-    int read_expression(string& s,
+    int read_expression(string& s,                        
                         deque<string>& tokens,					  
                         int bracket_level = 0)	
-    {            
-        char c = s[0];
-        unsigned int n = 0;	
+    {
+        unsigned int i;        
 	
-        for (; n < s.length() ; c = s[n]) {            
-            if (std::isspace(c)) {                
-                n++;		
-                continue;		
+        for (i = 0 ; i < s.length() ; i++) {            
+            char c = s[i];            
+            if (std::isspace(c)) {
+                // skip                
             } else if (c == '\"') {		
                 string token = "";		
-                n = read_next_delimita(s, token, n + 1, '\"');		
+                i = read_next_delimita(s, token, i + 1, '\"');                
                 tokens.push_back(token);		
-            } else if (c == '(') {		
-                string rest = "";		
-                n = read_next_delimita(s, rest, n + 1, ')');		
+            } else if (c == '(') {                
+                string rest = "";                
+                i = read_next_delimita(s, rest, i + 1, ')');                
                 read_expression(rest, tokens, bracket_level++);		
-            } else if (c == ':' ||
-                       std::isalpha(c) ||
-                       std::isalnum(c)) {		
+            } else if (c == ':' || std::isalnum(c)) {                
                 string token = "";		
-                n = read_next_delimita(s, token, n, ' ');		
-                tokens.push_back(token);		
-            }	  
-            n++;	  
+                i = read_next_delimita(s, token, i, ' ');                
+                tokens.push_back(token);                
+            }            
         }
         return bracket_level;	
     }    

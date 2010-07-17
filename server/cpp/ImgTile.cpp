@@ -163,7 +163,12 @@ int ImgTile::expose(void)
         write_png(fp); /* bug point */        
         fclose(fp);        
 	
-        swap();        
+        swap();
+
+        cout << "expose: "            
+             << __FUNCTION__            
+             << shadow_fname            
+             << endl;        
 	
         fp = NULL;        
         dirty = 0;        

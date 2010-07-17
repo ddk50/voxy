@@ -164,7 +164,9 @@ public:
                 vncclient->sendFramebufferUpdateRequest(0, 0, vncclient->fbWidth,
                                                         vncclient->fbHeight, false);                
                 incremental = true;                
-            }            
+            }
+
+            cout << "DisplayLoop 1" << endl;            
         
             if (vncclient->handleRFBServerMessage()) {                
                 switch(vncclient->srvmsg) {                    
@@ -176,6 +178,7 @@ public:
                         y = vncclient->recv_rect.r.y;                        
                         w = vncclient->recv_rect.r.w - vncclient->recv_rect.r.x;
                         h = vncclient->recv_rect.r.h - vncclient->recv_rect.r.y;
+                        cout << "DisplayLoop 2" << endl;                        
                         update_mosaic(x, y, w, h, vncclient->framebuffer, x, y);
                         export_mosaic();                        
                     }                    
@@ -247,6 +250,8 @@ public:
             vncconnected = false;			
         }        
     }
+
+    // void socksession(void)    
 };
 
 typedef shared_ptr<session>  session_ptr;

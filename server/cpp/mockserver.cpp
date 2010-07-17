@@ -61,7 +61,7 @@ int cmd_chngresol(session_ptr &s)
         rest_token.pop_front();
         rest_token.pop_front();        
     } else {
-        notice("too few argument for chngresol\n");        
+        throw "too few argument for chngresol\n";
     }
   
     return rest_token.size();    
@@ -86,7 +86,7 @@ int cmd_mouseevent(session_ptr &s)
 	
         return rest_token.size();        
     } else {
-        notice("too few argument for mouseevent\n");        
+        throw "too few argument for mouseevent\n";
     }
 
     return rest_token.size();    
@@ -103,7 +103,7 @@ int cmd_keyevent(session_ptr &s)
         s->SendKey(key, 1);        
         rest_token.pop_front();        
     } else {
-        notice("too few argument for keyevent\n");        
+        throw "too few argument for keyevent";
     }
     
     return rest_token.size();    
@@ -112,14 +112,14 @@ int cmd_keyevent(session_ptr &s)
 int cmd_vncconnect(session_ptr &s)    
 {
     deque<string>& rest_token = s->rest_token;    
-    string hoststr = rest_token[0];    
-    string password = rest_token[1];
-    char buffer[1000];
-    const char *delim = ":";    
-    char *ctx;    
-    char *host_ptr, *port_ptr;
-
     if (rest_token.size() >= 2) {        
+        string hoststr = rest_token[0];    
+        string password = rest_token[1];
+        char buffer[1000];
+        const char *delim = ":";    
+        char *ctx;    
+        char *host_ptr, *port_ptr;
+    
         std::strcpy(buffer, hoststr.c_str());        
 
         host_ptr = strtok_r(buffer, delim, &ctx);    
@@ -136,7 +136,7 @@ int cmd_vncconnect(session_ptr &s)
         if (s->VNCConnect(host, port, password)) {
             /* connect vnc */
             logging(boost::str(format("  establish VNCCONNECT (host: %s, port: %d, password: %s)")
-                               % host % port % password));        
+                               % host % port % password));            
         } else {
             logging(boost::str(format("  Could not establish VNCCOONECT (host: %s, port: %d, password: %s)")
                                % host % port % password));        
@@ -144,7 +144,7 @@ int cmd_vncconnect(session_ptr &s)
         rest_token.pop_front();        
         rest_token.pop_front();        
     } else {
-        notice("too few argument for vncconnect");        
+        throw "too few argument for vncconnect";        
     }    
     return rest_token.size();    
 }
@@ -187,33 +187,27 @@ static struct command_map cmap[] = {
     { cmd_vncdisconnect, ":VNCDISCONNECT" },    
 };
 
-void branching(session_ptr &s)    
-{
-    int canonical;
-    
+void exec_command(session_ptr &s)    
+{    
     try {
-    once:
-        canonical = 0;	
-        BOOST_FOREACH(struct command_map& e, cmap) {            
-            if (e.command == s->rest_token[0]) {                
-                canonical = 1;                
-                s->rest_token.pop_front();                
-                if (e.function(s) > 0)                    
-                    goto once;                
-                break;                
+        while (!s->rest_token.empty()) {
+            string token(s->rest_token.front());            
+            s->rest_token.pop_front();            
+            BOOST_FOREACH(struct command_map& e, cmap) {                
+                if (e.command == token) {
+                    cout << "exec_command: " << e.command << endl;                    
+                    e.function(s);
+                    goto found;
+                }            
             }            
+            error("unrecognized command: %s", token.c_str());
+        found:
+            ;            
         }        
-    } catch (std::exception& e) {
-        cout << "illegal command"<< e.what() << endl;        
-        canonical = 0;        
-    }
-    
-    if (!canonical) {
-        error("unrecognized command: %s", s->rest_token[0].c_str());
-        s->safe_clear();        
-    }
-    
-    s->rest_token.clear();    
+    } catch (std::exception& e) {        
+        cout << "illegal command" << e.what() << endl;        
+        s->rest_token.clear();        
+    }    
 }
 
 
@@ -235,7 +229,8 @@ void sendback_mesg(session_ptr& s)
 }
 
 void socksession(session_ptr& s)
-{    
+{
+    // s->socksession();    
     sparser_ptr sp = sparser_ptr(new sparser());    
     string message_chunk;
     char  data[max_length];    
@@ -253,13 +248,14 @@ void socksession(session_ptr& s)
                 break; // Connection closed cleanly by peer.                
             } else if (error) {
                 throw boost::system::system_error(error); // Some other error.                
-            }
-            
-            if (data[length - 1] == '\n') {                
-                message_chunk.append(data, length); {                    
+            }            
+            if (data[length - 1] == '\n') { // TODO                
+                message_chunk.append(data, length);                
+                {                    
                     sp->read_expression(message_chunk, s->rest_token);                    
-                    branching(s);                    
-                }; message_chunk.erase();                
+                    exec_command(s);                    
+                }                
+                message_chunk.erase();                
                 /* sending message  */                
                 sendback_mesg(s);                
             } else {                
@@ -281,13 +277,15 @@ void vncsession(session_ptr& s)
     }    
 }
 
-void server(asio::io_service& io_service, short port)    
-{    
+void server(short port)    
+{
+    boost::asio::io_service io_service;    
     tcp::acceptor acc(io_service, tcp::endpoint(tcp::v4(), port));
     
     while (1) {
-        session_ptr s = session_ptr(new session(io_service));        
-        acc.accept(*((*s).sock));        
+        session_ptr s = session_ptr(new session(io_service));
+        acc.accept(*s->sock);
+        logging("new client was connected\n");  /* TODO: log */        
         boost::thread sock_thread(boost::bind(socksession, s));        
         boost::thread vnc_thread(boost::bind(vncsession, s));        
     }    
@@ -300,8 +298,7 @@ int start_server(int argc, char *argv[])
             error("Usage: blocking_tcp_echo_server <port>");            
             return 0;            
         }        
-        boost::asio::io_service io_service;        	
-        server(io_service, std::atoi(argv[1]));        
+        server(std::atoi(argv[1]));        
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << "\n";
         return 0;        
