@@ -91,8 +91,15 @@ get '/listen' do
 end
 
 
-
 # マウスのイベント
+# (:MOUSEEVENT x y btn)
+# btnが-1のときはカーソルの移動のみ
+# btnが1-3のときは
+#   1 L button
+#   2 middle button
+#   3 R button
+# がクリックされたことを示す
+#
 get '/mouseevent' do
 	session_id = params[:session_id].to_i
 	session = $sessions[session_id]
@@ -101,7 +108,7 @@ get '/mouseevent' do
 	if params[:btn_state].to_i != 0 then
 		btn_code = -1
 	end
-	session.Send "(:MOUSEEVENT %s %s %s)" % [params[:x], params[:y], params[:btn]]
+	session.Send "(:MOUSEEVENT %s %s %s)" % [params[:x], params[:y], btn_code]
 	{
 		:smsg => session.ReadServerMessage()
 	}.to_json
