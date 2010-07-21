@@ -42,7 +42,7 @@ $max_recvlen = 64*1024;
 			@recv_buf = sexpr_list.pop
 			pp sexpr_list
 			sexpr_list.map do |i|
-				sexpr = i[2..-1].lstrip.split(" ")
+				sexpr = i.lstrip[2..-1].split(" ")
 				sexpr.map! do |s|
 					# ダブルクォートを外す
 					if s[0,1] == '"' then
