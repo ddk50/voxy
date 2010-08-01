@@ -67,8 +67,8 @@ VNCClient::VNCClient(const char *server, int port, const char *pswdfile)
     viewonly = false;
     serverCutText = NULL;
     newServerCutText = false;
-    //    rfbbuffer = NULL;
-    //    rfbbuffer_size = 0;    
+    rfbbuffer = NULL;
+    rfbbuffer_size = 0;    
 }
 
 VNCClientTextured::VNCClientTextured(char *server, int port, char *pswdfile)
@@ -220,6 +220,7 @@ void VNCClient::sendRFBEvent(char **params, unsigned int *num_params)
     }
     else
         error("invalid event '%s' passed to sendRFBEvent", params[0]);
+    
 	printf("invalid event '%s' passed to sendRFBEvent", params[0]);
 }
 
@@ -264,7 +265,7 @@ bool VNCClient::handleCR(int srcx, int srcy, int rx, int ry, int rw, int rh)
     VNCRGB *dest;
     VNCRGB *buftmp = new VNCRGB[rh*rw];
 
-    src = framebuffer + (srcy * fbWidth + srcx);
+    src = framebuffer + (srcy * fbWidth + srcx);    
     dest = buftmp;
     for (int h = 0; h < rh; h++) {
         memcpy(dest,src,rw*sizeof(VNCRGB));
@@ -467,11 +468,12 @@ bool VNCClient::handleHextile32(int rx, int ry, int rw, int rh)
 bool VNCClient::handleRFBServerMessage()
 {
     rfbServerToClientMsg msg;
-  
-    if (!framebuffer)
-        return false;
+    
     if (!rfbproto.VNC_sock.ReadFromRFBServer((char *) &msg, 1))        
         return false;
+
+    if (!framebuffer)
+        return false;    
 
     this->srvmsg = msg.type;
     switch (msg.type) {

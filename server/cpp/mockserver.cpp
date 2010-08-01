@@ -133,14 +133,19 @@ int cmd_vncconnect(session_ptr &s)
 
         logging("VNCCONNECT ... ");        
 
-        if (s->VNCConnect(host, port, password)) {
-            /* connect vnc */
-            logging(boost::str(format("  establish VNCCONNECT (host: %s, port: %d, password: %s)")
-                               % host % port % password));            
-        } else {
-            logging(boost::str(format("  Could not establish VNCCOONECT (host: %s, port: %d, password: %s)")
-                               % host % port % password));        
+        {
+            mutex::scoped_lock lock(s->thread_sync);            
+            if (s->VNCConnect(host, port, password)) {                
+                /* connect vnc */
+                logging(boost::str(format("  establish VNCCONNECT (host: %s, port: %d, password: %s)")
+                                   % host % port % password));
+                s->thread_cond.notify_one();            
+            } else {
+                logging(boost::str(format("  Could not establish VNCCOONECT (host: %s, port: %d, password: %s)")
+                                   % host % port % password));        
+            }            
         }        
+        
         rest_token.pop_front();        
         rest_token.pop_front();        
     } else {
@@ -151,9 +156,12 @@ int cmd_vncconnect(session_ptr &s)
 
 int cmd_vncdisconnect(session_ptr &s)    
 {
-    deque<string>& rest_token = s->rest_token;    
+    deque<string>& rest_token = s->rest_token;
 
-    s->VNCdisconnect();    
+    {
+        mutex::scoped_lock lock(s->thread_sync);        
+        s->VNCdisconnect();        
+    }    
     
     /* connect vnc */    
     logging(boost::str(format("VNCDISCONNECT")));    
@@ -162,9 +170,8 @@ int cmd_vncdisconnect(session_ptr &s)
 }
 
 int cmd_getupdate(session_ptr &s)    
-{
+{    
     deque<string>& rest_token = s->rest_token;
-    VNCClient_ptr vnc;    
     
     if (!s->vncconnected) {        
         logging(boost::str(format("GETUPDATE Nothing to do")));        
@@ -195,7 +202,6 @@ void exec_command(session_ptr &s)
             s->rest_token.pop_front();            
             BOOST_FOREACH(struct command_map& e, cmap) {                
                 if (e.command == token) {
-                    cout << "exec_command: " << e.command << endl;                    
                     e.function(s);
                     goto found;
                 }            
@@ -218,12 +224,12 @@ void sendback_mesg(session_ptr& s)
     mutex::scoped_lock lock(s->thread_sync);    
     if (s->main_que->size() > 0) {        
         s->main_que->push_back("\n");        
-        BOOST_FOREACH(string& v, *(s->main_que)) {            
-            asio::write(*(s->sock), asio::buffer(v.c_str(), strlen(v.c_str())));            
+        BOOST_FOREACH(string& v, *s->main_que) {            
+            asio::write(*s->sock, asio::buffer(v.c_str(), strlen(v.c_str())));            
         }        
     } else {
         string ret = "(:DONE)\n";        
-        asio::write(*(s->sock), asio::buffer(ret.c_str(), strlen(ret.c_str())));        
+        asio::write(*s->sock, asio::buffer(ret.c_str(), strlen(ret.c_str())));        
     }
     s->main_que->clear();    
 }
@@ -243,15 +249,14 @@ void socksession(session_ptr& s)
             
             size_t length = s->sock->read_some(asio::buffer(data), error);            
             
-            if (error == asio::error::eof) {
+            if (error == asio::error::eof) {                
                 logging("Connection closed cleanly by peer");                
                 break; // Connection closed cleanly by peer.                
             } else if (error) {
                 throw boost::system::system_error(error); // Some other error.                
             }            
             if (data[length - 1] == '\n') { // TODO                
-                message_chunk.append(data, length);                
-                {                    
+                message_chunk.append(data, length); {                    
                     sp->read_expression(message_chunk, s->rest_token);                    
                     exec_command(s);                    
                 }                
@@ -267,13 +272,21 @@ void socksession(session_ptr& s)
         cerr << "Exception in thread: " << e.what() << endl;        
     }
     s->sockconnected = false;
-    s->VNCdisconnect();    
+    s->VNCdisconnect();
+    s->thread_cond.notify_one();    
 }
 
 void vncsession(session_ptr& s)    
 {
     while (s->sockconnected) {        
-        s->DisplayLoop();        
+        if (!s->vncconnected) {
+            {               
+                mutex::scoped_lock lock(s->thread_sync);            
+                s->thread_cond.wait(lock);                
+            }            
+        } else {            
+            s->DisplayLoop();            
+        }        
     }    
 }
 
@@ -295,7 +308,7 @@ int start_server(int argc, char *argv[])
 {
     try {	
         if (argc != 2) {
-            error("Usage: blocking_tcp_echo_server <port>");            
+            error("Usage: %s <port>", argv[0]);            
             return 0;            
         }        
         server(std::atoi(argv[1]));        

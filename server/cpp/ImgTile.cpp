@@ -164,11 +164,6 @@ int ImgTile::expose(void)
         fclose(fp);        
 	
         swap();
-
-        cout << "expose: "            
-             << __FUNCTION__            
-             << shadow_fname            
-             << endl;        
 	
         fp = NULL;        
         dirty = 0;        
