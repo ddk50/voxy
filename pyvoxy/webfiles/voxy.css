@@ -1,0 +1,24 @@
+
+
+t_img{
+    width: 160px;
+    height: 120px;
+}
+
+div.cell{
+    border: 1px solid #000000;
+    width: 180px;
+    height: 160px;
+    float: left;
+}
+
+h2{
+    clear: left;
+}
+
+#view{
+    border: 1px solid #000000;
+    position: absolute;
+    left: 0;
+    top: 0;
+}

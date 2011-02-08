@@ -1,0 +1,35 @@
+
+# ユーザーの定義
+[user:test]
+password=str:pass
+targets=server1,vm1,vm2
+
+[user:test2]
+password=str:pass
+targets=server1,notepc
+
+# 対象となるVNCサーバーの定義
+[target:server1]
+host=192.168.0.11
+port=5900
+pwd=
+
+[target:vm1]
+host=192.168.0.12
+port=5901
+pwd=
+cmd_vmstart=./qemuctl.sh vm1_start
+cmd_vmstop=./qemuctl.sh vm1_stop
+
+[target:vm2]
+host=192.168.0.13
+port=5902
+pwd=
+cmd_vmstart=./qemuctl.sh vm2_start
+cmd_vmstop=./qemuctl.sh vm2_stop
+
+[target:notepc]
+host=192.168.0.14
+port=5900
+pwd=xxxx
+
