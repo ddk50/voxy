@@ -253,7 +253,7 @@ class VoxyWeb:
 
 
 def threadMain():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cherrypy.config.update({
 	    'server.socket_port': 8012,
 	    'server.socket_timeout': 400,
