@@ -1,5 +1,14 @@
+# *** VoXY Proxy 設定ファイル例
 
-# ユーザーの定義
+# === ユーザーの設定
+#
+# 書式: 
+#   [user:ユーザ名]
+#   password=str:パスワード
+#   targets=このユーザがアクセス可能なサーバIDのリスト
+
+# 以下例：
+#   ユーザ名: test パスワード: pass このユーザは、server1,vm1,vm2にアクセス可能
 [user:test]
 password=str:pass
 targets=server1,vm1,vm2
@@ -8,7 +17,21 @@ targets=server1,vm1,vm2
 password=str:pass
 targets=server1,notepc
 
-# 対象となるVNCサーバーの定義
+# === アクセス対象のVNCサーバの設定
+#
+# 書式
+#   [target:サーバID]
+#   host=VNCサーバのIPアドレス
+#   port=VNCサーバのポート (通常は5900 + ディスプレイ番号) 
+#   pwd=VNCサーバのパスワード
+#   cmd_vmstart=対象サーバを起動するためのコマンド
+#   cmd_vmstop=対象サーバを終了するためのコマンド
+#   cmd_vmstart/cmd_vmstopは省略可
+
+# 以下例：
+#   サーバID: server1
+#   VNCサーバ情報: 192.168.0.11 VNCディスプレイ0 (port 5900)
+#   VNCサーバパスワードなし
 [target:server1]
 host=192.168.0.11
 port=5900
@@ -32,4 +55,3 @@ cmd_vmstop=./qemuctl.sh vm2_stop
 host=192.168.0.14
 port=5900
 pwd=xxxx
-
