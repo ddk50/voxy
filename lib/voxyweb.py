@@ -243,7 +243,6 @@ class VoxyWeb:
             <body>
                 <div id='voxymain'>
                 </div>
-                <h2>Log area</h2>
                 <div id='logarea'>
                 </div>
             </body>
