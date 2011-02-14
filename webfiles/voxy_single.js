@@ -111,6 +111,11 @@ function SendMouseEvent()
 function KeyCodeJSToRFB(js_key)
 {
     var norm_key = KeyCode.translate_key_code(js_key);
+    // for ASCII code
+    if(0x41 <= norm_key && norm_key <= 0x5a)
+    {
+        return norm_key + 32;
+    }
     return norm_key;
 }
 
