@@ -21,6 +21,7 @@ function rand_int(max)
 // 初期化ルーチン
 function initVoXY()
 {
+    $('#voxymain').append("<div id='header'><h2 id='hostname'>"+gTarget+"</h2><a href='javascript:history.back();'>back to list</a></div>");
     $('#voxymain').append("<div id='view'></div>");
 
     $('#view')
