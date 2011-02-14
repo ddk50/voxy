@@ -116,6 +116,12 @@ function KeyCodeJSToRFB(js_key)
     {
         return norm_key + 32;
     }
+    // for Enter 
+    if(norm_key == 13)
+        return 0xff0d;
+    // for Bksp
+    if(norm_key == 8)
+        return 0xff08;
     return norm_key;
 }
 
