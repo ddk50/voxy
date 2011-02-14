@@ -107,13 +107,19 @@ function SendMouseEvent()
 }
 
 
+function KeyCodeJSToRFB(js_key)
+{
+    var norm_key = KeyCode.translate_key_code(js_key);
+    return norm_key;
+}
+
 function SendKeyEvent(keyCode, s)
 {
     $.ajax({
         url: '/keyevent',
         data: {
             target: gTarget, 
-            key: keyCode,
+            key: KeyCodeJSToRFB(keyCode),
             state: s
         },
         dataType: 'json'

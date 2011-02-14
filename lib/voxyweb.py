@@ -235,6 +235,7 @@ class VoxyWeb:
                 <link href="/files/voxy.css" rel="stylesheet" type="text/css" />
                 <script src="/files/jquery-1.4.2.min.js" type="text/javascript"></script>
                 <script src="/files/jquery.timers-1.2.js" type="text/javascript"></script>
+                <script src="/files/keycode.js" type="text/javascript"></script>
                 <script src="/files/voxy_single.js" type="text/javascript"></script>
                 <script type="text/javascript">
                     gTarget = '{0}';
