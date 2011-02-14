@@ -1,0 +1,166 @@
+!!! Strict
+/
+  Design by Free CSS Templates
+  http://www.freecsstemplates.org
+  Released for free under a Creative Commons Attribution 2.5 License
+%html{:xmlns => "http://www.w3.org/1999/xhtml"}
+  %head
+    %meta{:content => "text/html; charset=utf-8", "http-equiv" => "content-type"}/
+    %title VoXY: A VNC to HTTP proxy
+    %link{:href => "style.css", :media => "screen", :rel => "stylesheet", :type => "text/css"}/
+  %body
+    / start header
+    #header
+      %h1 VoXY
+      %p A VNC to HTTP Proxy
+    / end header
+    / start page
+    #page
+      #page-bgtop
+        #page-bgbtm
+          / start content
+          #content
+            .post
+              %a{:name => "about"}/
+              %h2.title VoXYについて
+              .entry
+                %p
+                  %strong> VoXY
+                  はWebブラウザベースのVNCクライアント環境です。
+                  VoXYを使えば、Webブラウザが使える環境ならどこからでも、あなたのデスクトップにアクセスすることができます。
+                %h3 特徴
+                %p
+                  VoXYは、幅広いクライアントと通信環境をサポートします。
+                %p
+                  VoXYクライアントは、HTMLとJavascriptのみで書かれており、FlashやJavaApplet等のブラウザ拡張を要求しません。
+                  サーバとの通信は全てHTTPを用いて行われています。
+                  特殊なポートを利用しないので、モバイル回線や企業内LANなどの制約の強い通信環境でも動作することが期待されます。
+                  場合によっては、VNCの通信に制限がかけられている環境でも、VoXYを用いればデスクトップにアクセスすることができます。
+                %h3 構成
+                %p
+                  VoXYは、以下のような構成で動作します。
+                %img{:src => "images/arch.png"}
+                %p
+                  VoXYは、Webブラウザ上で動作するVNCクライアントです。しかし、通常WebブラウザはHTTPのみをサポートするため、から直接VNCサーバに接続することはできません。
+                %p
+                  そこで、VoXYではProxyサーバを用いることによって、VNCサーバに代わりにアクセスし、画面やユーザ入力の情報をHTTP経由で提供します。
+            .post
+              %a{:name => "install"}/
+              %h2.title 導入方法
+              .entry
+                %h3 対象環境
+                %p
+                  VoXYを用いるには、まずVoXY Proxyサーバを導入する必要があります。
+                %p
+                  VoXY Proxyは、以下のような環境で動作します。
+                %ul
+                  %li Gentoo Linux (10.1)
+                  %li Debian Linux (squeeze)
+                %h3 依存パッケージのインストール
+                %p
+                  VoXY Proxyは、Pythonアプリケーションとして作製されています。そのため、VoXY Proxyの導入にあたって、Pythonの処理系と、VoXYが使用するいくつかのライブラリをインストールする必要があります。
+                %p
+                  VoXY Proxyは、以下のPython環境で動作します:
+                %ul 
+                  %li Python 2.6 (ver. 2.6.6で動作確認)
+                  %li ライブラリ:
+                  %ul
+                    %li Cherrypy (ver. 3.1.2で動作確認)
+                    %li twisted (ver. 10.1.0 / 9.0.0で動作確認)
+                %p
+                  これらは、Debian環境では以下のコマンドで導入することができます。
+                %pre
+                  \# apt-get install python2.6 python-twisted-core python-cherrypy3
+                %h3 VoXY Proxyのインストール
+                %p
+                  VoXY Proxyの最新版は、github上で提供されています。
+                %p
+                  gitクライアントが導入済みならば、以下のコマンドでレポジトリをcloneすることができます。
+                %pre
+                  \$ git clone git://github.com/ddk50/voxy.git
+                %p
+                  もしくは、gitクライアントを導入しなくても、最新版のtarballを用いてインストールすることができます。
+                %pre
+                  $ curl -L https://github.com/ddk50/voxy/tarball/master | tar zxv
+                %h3 VoXY Proxyの設定
+                %p
+                  %span.tt targets.cfg
+                  ファイルを編集し、VoXY Proxyの接続先の設定を行います。
+                %p
+                  VoXY Proxyの配布パッケージには、
+                  %span.tt targets.cfg.example
+                  という設定ファイルのテンプレートが付属しています。
+                  これを基に、ユーザ認証情報と接続先VNCサーバの情報を入力します。
+                %pre
+                  = preserve do
+                    $ cp targets.cfg{.example,}
+                    $ vi targets.cfg
+                %h3 VoXY Proxyの起動
+                %p
+                  VoXY Proxyを起動し、Webブラウザからアクセスできることを確かめます。
+                %p
+                  VoXY Proxyを起動するには、
+                  %span.tt voxy.py
+                  を起動します。
+                %pre
+                  $ ./voxy.py
+                %p 
+                  VoXYの導入は以上で終了です。
+                  Webブラウザより
+                  %pre
+                    http://[VoXY ProxyサーバのIPアドレス]:8012/
+                  にアクセスすることで、VoXYを利用することができます。
+                %p
+                  お疲れ様でした！
+            .post
+              %a{:name => "usage"}/
+              %h2.title 使い方
+              .entry
+                %p
+                  VoXYはWebブラウザベースのVNCクライアント環境です。
+                %p
+                  VoXYを利用するには、WebブラウザからVoXY Proxyサーバにアクセスします。
+                  VoXY Proxyは、デフォルトでは8012番ポートで動作します。アクセスするためには、Webブラウザのアドレスバーに以下のアドレスを入力します。
+                %pre
+                  http://[VoXY ProxyサーバのIPアドレス]:8012/
+                %p
+                  すると、以下のようなログイン画面が表示されます：
+                  %img{:src => "images/voxy1.png", :width => 400}
+                %p
+                  ログインするためには、
+                  %span.tt targets.cfg
+                  にて設定したユーザ名とパスワードを入力し、ログインボタンをクリックします。
+                %p
+                  ログインすると、ユーザがアクセスできるホスト一覧が表示されます：
+                  %img{:src => "images/voxy2.png", :width => 400}
+                %p
+                  %img{:src => "images/start.png"}>
+                  %img{:src => "images/stop.png"}>
+                  アイコンをクリックすると、それぞれサーバの起動、停止スクリプトを実行させることができます。 
+                %p
+                  画面のサムネイルをクリックすると、ホストの詳細画面に移動します。
+                  %img{:src => "images/voxy3.png", :width => 400}
+                %p
+                  この画面では、接続先のホストに対してマウス操作を行うことができます。
+                  (キーボード操作は実装中です)
+                  操作を終えたら、ブラウザの戻るボタンを押すことで、ホスト一覧画面に戻ることができます。
+          / end content
+          / start sidebar
+          #sidebar
+            %ul
+              %li
+                %h2 目次
+                %ul
+                  %li
+                    %a{:href => "#about"} VoXYとは
+                  %li
+                    %a{:href => "#install"} 導入方法
+                  %li
+                    %a{:href => "#usage"} 使い方
+          / end sidebar
+          %div{:style => "clear: both;"}  
+    / end page
+    #footer
+      %p
+        Design by
+        %a{:href => "http://www.freecsstemplates.org/"} Free CSS Templates

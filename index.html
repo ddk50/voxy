@@ -1,1 +1,207 @@
-test page
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+  Design by Free CSS Templates
+  http://www.freecsstemplates.org
+  Released for free under a Creative Commons Attribution 2.5 License
+-->
+<html xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <meta content='text/html; charset=utf-8' http-equiv='content-type' />
+    <title>VoXY: A VNC to HTTP proxy</title>
+    <link href='style.css' media='screen' rel='stylesheet' type='text/css' />
+  </head>
+  <body>
+    <!-- start header -->
+    <div id='header'>
+      <h1>VoXY</h1>
+      <p>A VNC to HTTP Proxy</p>
+    </div>
+    <!-- end header -->
+    <!-- start page -->
+    <div id='page'>
+      <div id='page-bgtop'>
+        <div id='page-bgbtm'>
+          <!-- start content -->
+          <div id='content'>
+            <div class='post'>
+              <a name='about' />
+              <h2 class='title'>VoXYについて</h2>
+              <div class='entry'>
+                <p><strong>VoXY</strong>はWebブラウザベースのVNCクライアント環境です。
+                  VoXYを使えば、Webブラウザが使える環境ならどこからでも、あなたのデスクトップにアクセスすることができます。
+                </p>
+                <h3>特徴</h3>
+                <p>
+                  VoXYは、幅広いクライアントと通信環境をサポートします。
+                </p>
+                <p>
+                  VoXYクライアントは、HTMLとJavascriptのみで書かれており、FlashやJavaApplet等のブラウザ拡張を要求しません。
+                  サーバとの通信は全てHTTPを用いて行われています。
+                  特殊なポートを利用しないので、モバイル回線や企業内LANなどの制約の強い通信環境でも動作することが期待されます。
+                  場合によっては、VNCの通信に制限がかけられている環境でも、VoXYを用いればデスクトップにアクセスすることができます。
+                </p>
+                <h3>構成</h3>
+                <p>
+                  VoXYは、以下のような構成で動作します。
+                </p>
+                <img src='images/arch.png' />
+                <p>
+                  VoXYは、Webブラウザ上で動作するVNCクライアントです。しかし、通常WebブラウザはHTTPのみをサポートするため、から直接VNCサーバに接続することはできません。
+                </p>
+                <p>
+                  そこで、VoXYではProxyサーバを用いることによって、VNCサーバに代わりにアクセスし、画面やユーザ入力の情報をHTTP経由で提供します。
+                </p>
+              </div>
+            </div>
+            <div class='post'>
+              <a name='install' />
+              <h2 class='title'>導入方法</h2>
+              <div class='entry'>
+                <h3>対象環境</h3>
+                <p>
+                  VoXYを用いるには、まずVoXY Proxyサーバを導入する必要があります。
+                </p>
+                <p>
+                  VoXY Proxyは、以下のような環境で動作します。
+                </p>
+                <ul>
+                  <li>Gentoo Linux (10.1)</li>
+                  <li>Debian Linux (squeeze)</li>
+                </ul>
+                <h3>依存パッケージのインストール</h3>
+                <p>
+                  VoXY Proxyは、Pythonアプリケーションとして作製されています。そのため、VoXY Proxyの導入にあたって、Pythonの処理系と、VoXYが使用するいくつかのライブラリをインストールする必要があります。
+                </p>
+                <p>
+                  VoXY Proxyは、以下のPython環境で動作します:
+                </p>
+                <ul>
+                  <li>Python 2.6 (ver. 2.6.6で動作確認)</li>
+                  <li>ライブラリ:</li>
+                  <ul>
+                    <li>Cherrypy (ver. 3.1.2で動作確認)</li>
+                    <li>twisted (ver. 10.1.0 / 9.0.0で動作確認)</li>
+                  </ul>
+                </ul>
+                <p>
+                  これらは、Debian環境では以下のコマンドで導入することができます。
+                </p>
+                <pre># apt-get install python2.6 python-twisted-core python-cherrypy3</pre>
+                <h3>VoXY Proxyのインストール</h3>
+                <p>
+                  VoXY Proxyの最新版は、github上で提供されています。
+                </p>
+                <p>
+                  gitクライアントが導入済みならば、以下のコマンドでレポジトリをcloneすることができます。
+                </p>
+                <pre>$ git clone git://github.com/ddk50/voxy.git</pre>
+                <p>
+                  もしくは、gitクライアントを導入しなくても、最新版のtarballを用いてインストールすることができます。
+                </p>
+                <pre>$ curl -L https://github.com/ddk50/voxy/tarball/master | tar zxv</pre>
+                <h3>VoXY Proxyの設定</h3>
+                <p>
+                  <span class='tt'>targets.cfg</span>
+                  ファイルを編集し、VoXY Proxyの接続先の設定を行います。
+                </p>
+                <p>
+                  VoXY Proxyの配布パッケージには、
+                  <span class='tt'>targets.cfg.example</span>
+                  という設定ファイルのテンプレートが付属しています。
+                  これを基に、ユーザ認証情報と接続先VNCサーバの情報を入力します。
+                </p>
+                <pre>$ cp targets.cfg{.example,}&#x000A;$ vi targets.cfg</pre>
+                <h3>VoXY Proxyの起動</h3>
+                <p>
+                  VoXY Proxyを起動し、Webブラウザからアクセスできることを確かめます。
+                </p>
+                <p>
+                  VoXY Proxyを起動するには、
+                  <span class='tt'>voxy.py</span>
+                  を起動します。
+                </p>
+                <pre>$ ./voxy.py</pre>
+                <p>
+                  VoXYの導入は以上で終了です。
+                  Webブラウザより
+                  <pre>http://[VoXY ProxyサーバのIPアドレス]:8012/</pre>
+                  にアクセスすることで、VoXYを利用することができます。
+                </p>
+                <p>
+                  お疲れ様でした！
+                </p>
+              </div>
+            </div>
+            <div class='post'>
+              <a name='usage' />
+              <h2 class='title'>使い方</h2>
+              <div class='entry'>
+                <p>
+                  VoXYはWebブラウザベースのVNCクライアント環境です。
+                </p>
+                <p>
+                  VoXYを利用するには、WebブラウザからVoXY Proxyサーバにアクセスします。
+                  VoXY Proxyは、デフォルトでは8012番ポートで動作します。アクセスするためには、Webブラウザのアドレスバーに以下のアドレスを入力します。
+                </p>
+                <pre>http://[VoXY ProxyサーバのIPアドレス]:8012/</pre>
+                <p>
+                  すると、以下のようなログイン画面が表示されます：
+                  <img src='images/voxy1.png' width='400' />
+                </p>
+                <p>
+                  ログインするためには、
+                  <span class='tt'>targets.cfg</span>
+                  にて設定したユーザ名とパスワードを入力し、ログインボタンをクリックします。
+                </p>
+                <p>
+                  ログインすると、ユーザがアクセスできるホスト一覧が表示されます：
+                  <img src='images/voxy2.png' width='400' />
+                </p>
+                <p><img src='images/start.png' /><img src='images/stop.png' />アイコンをクリックすると、それぞれサーバの起動、停止スクリプトを実行させることができます。
+                </p>
+                <p>
+                  画面のサムネイルをクリックすると、ホストの詳細画面に移動します。
+                  <img src='images/voxy3.png' width='400' />
+                </p>
+                <p>
+                  この画面では、接続先のホストに対してマウス操作を行うことができます。
+                  (キーボード操作は実装中です)
+                  操作を終えたら、ブラウザの戻るボタンを押すことで、ホスト一覧画面に戻ることができます。
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- end content -->
+          <!-- start sidebar -->
+          <div id='sidebar'>
+            <ul>
+              <li>
+                <h2>目次</h2>
+                <ul>
+                  <li>
+                    <a href='#about'>VoXYとは</a>
+                  </li>
+                  <li>
+                    <a href='#install'>導入方法</a>
+                  </li>
+                  <li>
+                    <a href='#usage'>使い方</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <!-- end sidebar -->
+          <div style='clear: both;'> </div>
+        </div>
+      </div>
+    </div>
+    <!-- end page -->
+    <div id='footer'>
+      <p>
+        Design by
+        <a href='http://www.freecsstemplates.org/'>Free CSS Templates</a>
+      </p>
+    </div>
+  </body>
+</html>
