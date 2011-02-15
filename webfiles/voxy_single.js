@@ -111,17 +111,33 @@ function SendMouseEvent()
 function KeyCodeJSToRFB(js_key)
 {
     var norm_key = KeyCode.translate_key_code(js_key);
+
     // for ASCII code
     if(0x41 <= norm_key && norm_key <= 0x5a)
     {
         return norm_key + 32;
     }
-    // for Enter 
-    if(norm_key == 13)
-        return 0xff0d;
-    // for Bksp
-    if(norm_key == 8)
-        return 0xff08;
+
+    if(norm_key == 16) return 0xffe1;
+    if(norm_key == 17) return 0xffe3;
+    if(norm_key == 18) return 0xffe9;
+    if(norm_key == 37) return 0xff51;
+    if(norm_key == 38) return 0xff52;
+    if(norm_key == 39) return 0xff53;
+    if(norm_key == 40) return 0xff54;
+    if(norm_key == 33) return 0xff55;
+    if(norm_key == 34) return 0xff56;
+    if(norm_key == 36) return 0xff50;
+    if(norm_key == 35) return 0xff57;
+    if(norm_key == 45) return 0xff63;
+    if(norm_key == 46) return 0xffff;
+    
+    // for other special keys
+    if(norm_key < 0x41)
+    {
+        return 0xff00 + norm_key;
+    }
+
     return norm_key;
 }
 
@@ -143,8 +159,8 @@ function SendKeyEvent(keyCode, s)
 function OnMouseDown(e)
 {
     e.preventDefault();
-    MouseX = e.pageX;
-	MouseY = e.pageY;
+    MouseX = e.pageX - this.offsetLeft;
+    MouseY = e.pageY - this.offsetTop;
     MouseBtn = MouseBtn | (1 << (e.which-1));
     SendMouseEvent();
     WriteLog("Btn:" + MouseBtn);
@@ -153,8 +169,8 @@ function OnMouseDown(e)
 function OnMouseUp(e)
 {
     e.preventDefault();
-    MouseX = e.pageX;
-	MouseY = e.pageY;
+    MouseX = e.pageX - this.offsetLeft;
+    MouseY = e.pageY - this.offsetTop;
     flag = (1 << (e.which-1));
     MouseBtn = (MouseBtn | flag) ^ flag;
     SendMouseEvent();
@@ -164,8 +180,8 @@ function OnMouseMove(e)
 {
     e.preventDefault();
     MouseMoved = 1;
-    MouseX = e.pageX;
-	MouseY = e.pageY;
+    MouseX = e.pageX - this.offsetLeft;
+    MouseY = e.pageY - this.offsetTop;
 }
 
 function OnKeyUp(e)
