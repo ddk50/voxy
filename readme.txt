@@ -1,5 +1,7 @@
+VoXY: Vnc Over proXY
+ウェブブラウザ上で動作するVNCクライアント
 
-VoXY
+詳細はウェブサイトにて： http://ddk50.github.com/voxy
 
 ◆確認環境
 　・OS: Gentoo Linux (32bit版)
@@ -17,4 +19,7 @@ VoXY
 　・voxy.pyを実行したホストのポート8012に対してWebブラウザからアクセスする
 　　・URLは、例えば対象ホスト名がvoxyhostなら「http://voxyhost:8012/」
 
+◆ライセンス
+　・MIT License
+　　・LICENSE ファイルを参照のこと
 
