@@ -17,12 +17,12 @@ function initVoXY()
 {
     // $('#voxymain');
     $.ajax({
+        type: "POST",
         url: '/jlist',
-        data: 0,
+        data: {msgserial: "0"},
         dataType: 'json',
-        context: this,
         success: initList
-    });
+    })
 }
 
 function initList(data)
@@ -56,10 +56,10 @@ function initList(data)
 function do_cmd(target, cmd)
 {
     $.ajax({
+        type: "POST",
         url: '/jcmd',
         data: {"target": target, "cmd": cmd},
         dataType: 'json',
-        context: this,
         success: command_done
     });
 }
@@ -75,6 +75,7 @@ function command_done(data)
 function revRequest()
 {
     $.ajax({
+        type: "POST",
         url: '/jrev',
         data: {"targets": target_list},
         dataType: 'json',

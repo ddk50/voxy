@@ -213,7 +213,7 @@ class VNCClientFactory(protocol.ClientFactory):
 
 class VNCManager:
     def __init__(self):
-        host = "172.29.4.60"
+        host = ""
         port = 5900
         self.application = service.Application("rfbproxy") # create Application
         self.targets = {}
@@ -270,7 +270,6 @@ class VNCManager:
 def run():
     global Manager
     Manager = VNCManager()
-    # Manager.newConnection("172.29.4.60", 5900, "")
     print "Manager = ", str(Manager)
     Manager.run()
 

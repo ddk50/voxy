@@ -32,16 +32,18 @@ function initVoXY()
 		.bind('contextmenu', OnContextMenu)
 	;
 
-	$(window)
-		.bind('keydown', OnKeyDown)
-		.bind('keyup', OnKeyUp)
+	$(document)
+		.keydown(OnKeyDown)
+		.keyup(OnKeyUp)
 	;
+
     getFullImg();
 }
 
 function getFullImg()
 {
     $.ajax({
+        type: "POST",
         url: '/fullimg_revisions',
         data: {target: gTarget},
         dataType: 'json',
@@ -95,6 +97,7 @@ function WriteLog(str)
 function SendMouseEvent()
 {
     $.ajax({
+        type: "POST",
         url: '/mouseevent',
         data: {
             target: gTarget, 
@@ -144,6 +147,7 @@ function KeyCodeJSToRFB(js_key)
 function SendKeyEvent(keyCode, s)
 {
     $.ajax({
+        type: "POST",
         url: '/keyevent',
         data: {
             target: gTarget, 

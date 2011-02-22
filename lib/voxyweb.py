@@ -122,7 +122,7 @@ class VoxyWeb:
         return cherrypy.session['login_user']
 
     @json_expose
-    def jlist(self):
+    def jlist(self, msgserial = ""):
         config = GetConfig()
         target_names = config.list_targets_for_user(self.get_current_user())
         targets = []
